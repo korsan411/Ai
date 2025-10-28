@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- مكتبات خارجية -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <script src="https://docs.opencv.org/4.x/opencv.js"></script>
   <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
 </head>
 
@@ -21,12 +21,28 @@
     import { initDebugOverlay } from './js/core/debugOverlay.js';
     import { taskManager } from './js/core/taskManager.js';
 
+    // التأكد من تحميل OpenCV قبل البدء
+    function waitForOpenCV() {
+      return new Promise((resolve) => {
+        if (cv?.onRuntimeInitialized) {
+          cv.onRuntimeInitialized = () => {
+            console.log('✅ OpenCV جاهز للعمل');
+            resolve();
+          };
+        } else {
+          // في حال تحميل سريع جدًا
+          resolve();
+        }
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       console.log('🚀 تشغيل CncAi — Modular Edition...');
       try {
-        await initCV();
-        initDebugOverlay();
-        initUI();
+        await waitForOpenCV();
+        await initCV();               // تهيئة OpenCV
+        initDebugOverlay();           // تهيئة Debug Overlay
+        initUI();                     // تهيئة الواجهة
         console.log('✅ تم تشغيل الواجهة بنجاح.');
       } catch (err) {
         console.error('❌ خطأ أثناء التشغيل:', err);
