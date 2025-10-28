@@ -1,57 +1,48 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CncAi — Ready</title>
-  <link rel="stylesheet" href="css/style.css" />
+<div id="cncai-root">⏳ جاري التحميل...</div>
 
-  <!-- OpenCV -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-</head>
-<body>
-  <div id="cncai-root">⏳ جاري التحميل...</div>
+<script>
+const root = document.getElementById('cncai-root');
 
-  <script>
-    const root = document.getElementById('cncai-root');
-
-    // الانتظار حتى يكون OpenCV جاهز
-    function waitForCV() {
-      return new Promise((resolve, reject) => {
-        const check = setInterval(() => {
-          if (cv && cv.Mat) { // مكتبة OpenCV جاهزة
-            clearInterval(check);
-            resolve();
-          }
-        }, 50);
-        // Timeout بعد 15 ثانية
-        setTimeout(() => {
-          clearInterval(check);
-          reject('OpenCV لم يتم تحميله خلال الوقت المحدد');
-        }, 15000);
-      });
-    }
-
-    async function initApp() {
-      try {
-        root.innerText = '⏳ انتظار OpenCV...';
-        await waitForCV();
-        root.innerText = '✅ OpenCV جاهز للعمل!';
-        console.log('OpenCV جاهز');
-
-        // يمكنك هنا استدعاء ملفات JS المحلية عبر <script> أو إضافتها مباشرة
-        // مثال:
-        // const script = document.createElement('script');
-        // script.src = '/Ai/js/cv/cv-processing.js';
-        // document.body.appendChild(script);
-
-      } catch (err) {
-        root.innerText = '❌ فشل تحميل OpenCV';
-        console.error(err);
+function waitForCV() {
+  return new Promise((resolve, reject) => {
+    const check = setInterval(() => {
+      if (cv && cv.Mat) {
+        clearInterval(check);
+        resolve();
       }
-    }
+    }, 50);
+    setTimeout(() => {
+      clearInterval(check);
+      reject('OpenCV لم يتم تحميله خلال الوقت المحدد');
+    }, 15000);
+  });
+}
 
-    initApp();
-  </script>
-</body>
-</html>
+async function initApp() {
+  try {
+    root.innerText = '⏳ انتظار OpenCV...';
+    await waitForCV();
+    root.innerText = '✅ OpenCV جاهز!';
+
+    // استدعاء الدوال المحلية بعد التأكد من تحميل OpenCV
+    if (typeof initCV === 'function') initCV();
+    if (typeof initDebugOverlay === 'function') initDebugOverlay();
+    if (typeof initUI === 'function') initUI();
+
+    console.log('✅ CncAi جاهز للعمل!');
+    root.innerText = '✅ CncAi جاهز للعمل!';
+  } catch (err) {
+    root.innerText = '❌ فشل تحميل OpenCV';
+    console.error(err);
+  }
+}
+
+// تشغيل التطبيق
+initApp();
+</script>
+
+<!-- تحميل ملفات JS المحلية -->
+<script src="/Ai/js/cv/cv-processing.js"></script>
+<script src="/Ai/js/ui/ui-init.js"></script>
+<script src="/Ai/js/core/debugOverlay.js"></script>
+<script src="/Ai/js/core/taskManager.js"></script>
