@@ -21,33 +21,26 @@
     import { initDebugOverlay } from './js/core/debugOverlay.js';
     import { taskManager } from './js/core/taskManager.js';
 
-    // التأكد من تحميل OpenCV قبل البدء
-    function waitForOpenCV() {
-      return new Promise((resolve) => {
-        if (cv?.onRuntimeInitialized) {
-          cv.onRuntimeInitialized = () => {
-            console.log('✅ OpenCV جاهز للعمل');
-            resolve();
-          };
-        } else {
-          // في حال تحميل سريع جدًا
-          resolve();
-        }
-      });
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      console.log('🚀 تشغيل CncAi — Modular Edition...');
+    // دالة لتهيئة التطبيق بعد تحميل OpenCV
+    async function initApp() {
+      console.log('🚀 بدء تشغيل CncAi — Modular Edition...');
       try {
-        await waitForOpenCV();
         await initCV();               // تهيئة OpenCV
         initDebugOverlay();           // تهيئة Debug Overlay
         initUI();                     // تهيئة الواجهة
-        console.log('✅ تم تشغيل الواجهة بنجاح.');
+        console.log('✅ تم تشغيل التطبيق بنجاح.');
       } catch (err) {
         console.error('❌ خطأ أثناء التشغيل:', err);
       }
-    });
+    }
+
+    // الانتظار حتى يكون OpenCV جاهزًا
+    if (cv && cv.onRuntimeInitialized !== undefined) {
+      cv.onRuntimeInitialized = initApp;
+    } else {
+      // fallback في حال تم تحميل OpenCV بسرعة
+      initApp();
+    }
   </script>
 </body>
 </html>
