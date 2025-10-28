@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CncAi — Modular Edition</title>
+  <title>CncAi — GitHub Pages Ready</title>
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- مكتبات خارجية -->
@@ -13,33 +13,38 @@
 
 <body>
   <noscript>⚠️ يرجى تفعيل JavaScript لتشغيل تطبيق CNC AI</noscript>
-  <div id="cncai-root"></div>
+  <div id="cncai-root">⏳ جاري التحميل...</div>
 
   <script type="module">
-    import { initCV } from './js/cv/cv-processing.js';
-    import { initUI } from './js/ui/ui-init.js';
-    import { initDebugOverlay } from './js/core/debugOverlay.js';
-    import { taskManager } from './js/core/taskManager.js';
+    // روابط كاملة مع اسم المستودع لضمان تحميل GitHub Pages
+    const basePath = '/Ai'; // اسم المستودع على GitHub
 
-    // دالة لتهيئة التطبيق بعد تحميل OpenCV
+    import { initCV } from `${basePath}/js/cv/cv-processing.js`;
+    import { initUI } from `${basePath}/js/ui/ui-init.js`;
+    import { initDebugOverlay } from `${basePath}/js/core/debugOverlay.js`;
+    import { taskManager } from `${basePath}/js/core/taskManager.js`;
+
     async function initApp() {
-      console.log('🚀 بدء تشغيل CncAi — Modular Edition...');
+      const root = document.getElementById('cncai-root');
+      root.innerText = '🚀 بدء تشغيل CncAi...';
+
       try {
-        await initCV();               // تهيئة OpenCV
-        initDebugOverlay();           // تهيئة Debug Overlay
-        initUI();                     // تهيئة الواجهة
-        console.log('✅ تم تشغيل التطبيق بنجاح.');
+        await initCV();              // تهيئة OpenCV
+        initDebugOverlay();          // تهيئة Debug Overlay
+        initUI();                    // تهيئة الواجهة
+        root.innerText = '✅ CncAi جاهز للعمل!';
+        console.log('✅ CncAi جاهز للعمل.');
       } catch (err) {
+        root.innerText = '❌ حدث خطأ أثناء التشغيل';
         console.error('❌ خطأ أثناء التشغيل:', err);
       }
     }
 
-    // الانتظار حتى يكون OpenCV جاهزًا
+    // انتظار OpenCV قبل البدء
     if (cv && cv.onRuntimeInitialized !== undefined) {
       cv.onRuntimeInitialized = initApp;
     } else {
-      // fallback في حال تم تحميل OpenCV بسرعة
-      initApp();
+      initApp(); // fallback
     }
   </script>
 </body>
