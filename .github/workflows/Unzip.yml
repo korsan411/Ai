@@ -1,9 +1,34 @@
-name: Unzip File
-on: [push]
+name: Unzip CncAi Modular
+
+on:
+  push:
+    paths:
+      - 'CncAi_Modular.zip'
+  workflow_dispatch:  # Allows manual trigger
+
 jobs:
   unzip:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v2
-      - name: Unzip file
-        run: unzip CncAi_Modular.zip
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Unzip CncAi_Modular
+      run: |
+        echo "فك ضغط الملف..."
+        unzip -q CncAi_Modular.zip -d CncAi_Modular_Extracted
+        echo "تم فك الضغط بنجاح!"
+        
+    - name: List extracted files
+      run: |
+        echo "المحتويات المستخرجة:"
+        ls -la CncAi_Modular_Extracted/
+        
+    - name: Commit extracted files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CncAi_Modular_Extracted/
+        git commit -m "Auto-extract: CncAi_Modular.zip" || echo "No changes to commit"
+        git push
