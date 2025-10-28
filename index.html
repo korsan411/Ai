@@ -46,12 +46,12 @@
         root.innerText = '✅ OpenCV جاهز!';
 
         // استدعاء الدوال المحلية بعد التأكد من تحميل OpenCV
-        if (typeof initCV === 'function') initCV();
-        if (typeof initDebugOverlay === 'function') initDebugOverlay();
-        if (typeof initUI === 'function') initUI();
+        if (window.initCV) window.initCV();
+        if (window.initDebugOverlay) window.initDebugOverlay();
+        if (window.initUI) window.initUI();
 
-        console.log('✅ CncAi جاهز للعمل!');
         root.innerText = '✅ CncAi جاهز للعمل!';
+        console.log('✅ CncAi جاهز للعمل!');
       } catch (err) {
         root.innerText = '❌ فشل تحميل OpenCV';
         console.error(err);
