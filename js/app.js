@@ -1,23 +1,29 @@
-// مثال في cv-processing.js
-window.initCV = function() {
-  console.log('initCV تم استدعاؤه');
-  // ... الكود الفعلي لتهيئة OpenCV
-}
+// app.js - bootstrap for the modular skeleton
 
-// مثال في ui-init.js
-window.initUI = function() {
-  console.log('initUI تم استدعاؤه');
-  // ... الكود الفعلي لواجهة المستخدم
-}
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('CncAi Modular bootstrap starting...');
 
-// مثال في debugOverlay.js
-window.initDebugOverlay = function() {
-  console.log('initDebugOverlay تم استدعاؤه');
-  // ... الكود الفعلي للـ Debug Overlay
-}
+  // استدعاء Debug Overlay
+  if (window.initDebugOverlay) window.initDebugOverlay();
 
-// مثال في simulation3d.js
-window.initSimulation = function() {
-  console.log('initSimulation تم استدعاؤه');
-  // ... كود المحاكاة الثلاثية الأبعاد
-}
+  // انتظار OpenCV
+  try {
+    await new Promise((resolve, reject) => {
+      const check = setInterval(() => {
+        if (cv && cv.Mat) { clearInterval(check); resolve(); }
+      }, 50);
+      setTimeout(() => { clearInterval(check); reject('OpenCV لم يتم تحميله'); }, 15000);
+    });
+    console.log('OpenCV initialized.');
+  } catch (e) {
+    console.warn('OpenCV init failed', e);
+  }
+
+  // استدعاء باقي الدوال من window
+  if (window.initCV) window.initCV();
+  if (window.initUI) window.initUI();
+  if (window.initSimulation) window.initSimulation();
+  if (window.taskManager) window.CncAi = { taskManager: window.taskManager };
+
+  console.log('CncAi Modular skeleton initialized.');
+});
