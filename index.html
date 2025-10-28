@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CncAi — GitHub Pages Ready</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css">
 
-  <!-- مكتبات خارجية -->
+  <!-- OpenCV -->
   <script src="https://docs.opencv.org/4.x/opencv.js"></script>
   <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
 </head>
@@ -14,10 +14,11 @@
   <div id="cncai-root">⏳ جاري التحميل...</div>
 
   <!-- تحميل ملفات JS المحلية -->
-  <script src="/Ai/js/cv/cv-processing.js"></script>
-  <script src="/Ai/js/ui/ui-init.js"></script>
-  <script src="/Ai/js/core/debugOverlay.js"></script>
-  <script src="/Ai/js/core/taskManager.js"></script>
+  <script src="/Ai/js/cv-processing.js"></script>
+  <script src="/Ai/js/ui-init.js"></script>
+  <script src="/Ai/js/debugOverlay.js"></script>
+  <script src="/Ai/js/taskManager.js"></script>
+  <script src="/Ai/js/simulation3d.js"></script>
 
   <script>
     const root = document.getElementById('cncai-root');
@@ -38,17 +39,18 @@
       });
     }
 
-    // تشغيل التطبيق بعد تحميل OpenCV وJS
     async function initApp() {
       try {
         root.innerText = '⏳ انتظار OpenCV...';
         await waitForCV();
         root.innerText = '✅ OpenCV جاهز!';
 
-        // استدعاء الدوال المحلية بعد التأكد من تحميل OpenCV
+        // استدعاء جميع الدوال من window بعد تحميل OpenCV
         if (window.initCV) window.initCV();
         if (window.initDebugOverlay) window.initDebugOverlay();
         if (window.initUI) window.initUI();
+        if (window.initSimulation) window.initSimulation();
+        if (window.taskManager) window.CncAi = { taskManager: window.taskManager };
 
         root.innerText = '✅ CncAi جاهز للعمل!';
         console.log('✅ CncAi جاهز للعمل!');
@@ -58,7 +60,6 @@
       }
     }
 
-    // بدء التطبيق
     initApp();
   </script>
 </body>
