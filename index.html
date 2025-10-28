@@ -1,11 +1,10 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CncAi — Modular Edition</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 
   <!-- مكتبات خارجية -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
@@ -13,23 +12,25 @@
 </head>
 
 <body>
-  <noscript>الرجاء تفعيل JavaScript لتشغيل تطبيق CncAi</noscript>
-
-  <!-- سيتم حقن الواجهة الأصلية تلقائيًا بواسطة ui-init.js -->
+  <noscript>⚠️ يرجى تفعيل JavaScript لتشغيل تطبيق CNC AI</noscript>
   <div id="cncai-root"></div>
 
   <script type="module">
     import { initCV } from './js/cv/cv-processing.js';
     import { initUI } from './js/ui/ui-init.js';
-    import { taskManager } from './js/core/taskManager.js';
     import { initDebugOverlay } from './js/core/debugOverlay.js';
+    import { taskManager } from './js/core/taskManager.js';
 
     window.addEventListener('DOMContentLoaded', async () => {
-      console.log('🚀 Starting CncAi Modular Edition...');
-      await initCV();
-      initDebugOverlay();
-      initUI();
-      console.log('✅ CncAi UI initialized successfully.');
+      console.log('🚀 تشغيل CncAi — Modular Edition...');
+      try {
+        await initCV();
+        initDebugOverlay();
+        initUI();
+        console.log('✅ تم تشغيل الواجهة بنجاح.');
+      } catch (err) {
+        console.error('❌ خطأ أثناء التشغيل:', err);
+      }
     });
   </script>
 </body>
