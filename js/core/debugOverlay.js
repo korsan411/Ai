@@ -64,7 +64,8 @@
 
     // expose global API
     window.CncAi = window.CncAi || {};
-    window.CncAi.debug = {
+
+window.CncAi.debug = {
       log: function(msg){ appendLog(String(msg)); showOverlay(); },
       info: function(msg){ appendLog('[i] ' + String(msg)); showOverlay(); },
       warn: function(msg){ appendLog('[!] ' + String(msg)); showOverlay(); },
