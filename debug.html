@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>CncAi — Debug Checker</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial; background:#0b0c0e;color:#e6eef3;padding:12px}
+    h1{font-size:18px;margin:0 0 8px}
+    .ok{color:#7ef2a3}
+    .bad{color:#ff9aa2}
+    .warn{color:#ffd28a}
+    .box{background:#0f1316;border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin:8px 0}
+    pre{background:#050608;padding:8px;border-radius:6px;overflow:auto;color:#cfe8ff}
+    table{width:100%;border-collapse:collapse}
+    td,th{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left}
+    th{color:#9fb4c9;font-weight:600}
+    .small{font-size:13px;color:#9aa6b0}
+    button{padding:8px 10px;border-radius:8px;border:0;background:#2b6cff;color:white;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>CncAi — صفحة التشخيص السريع</h1>
+  <div class="small">صفحة تفحص وجود المسارات، تحميل المكتبات، وحالة الدوال الأساسية (مفيدة للهواتف بدون DevTools).</div>
+
+  <div class="box" id="summary">
+    جارٍ الفحص... انتظر ثانية واحدة ثم انزل لأسفل للاطلاع على النتائج.
+  </div>
+
+  <div class="box">
+    <strong>روابط تُفحَص (Relative paths)</strong>
+    <table id="filesTable" aria-hidden="false">
+      <thead><tr><th>المسار</th><th>حالة التحميل</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="box">
+    <strong>حالة المكتبات والكائنات العالمية</strong>
+    <ul id="globalsList"></ul>
+  </div>
+
+  <div class="box">
+    <strong>أخطاء وحدث onerror (إن وُجد)</strong>
+    <pre id="errors">لا أخطاء حتى الآن.</pre>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button id="rerun">إعادة الفحص</button>
+    <button id="openIndex">فتح index.html</button>
+  </div>
+
+<script>
+(function(){
+  const root = "/Ai/"; // repo served at https://korsan411.github.io/Ai/
+  // قائمة المسارات النسبية للتحقق (تأكد أنها تطابق مساراتك في index.html)
+  const paths = [
+    "index.html",
+    "css/style.css",
+    "js/helpers/utils.js",
+    "js/helpers/validators.js",
+    "js/core/debugOverlay.js",
+    "js/core/taskManager.js",
+    "js/core/memoryManager.js",
+    "js/cv/cv-processing.js",
+    "js/gcode/gcode-generator.js",
+    "js/three/simulation3d.js",
+    "js/ui/ui-controls.js",
+    "js/ui/ui-init.js"
+  ];
+
+  const filesTable = document.querySelector("#filesTable tbody");
+  const globalsList = document.getElementById("globalsList");
+  const summary = document.getElementById("summary");
+  const errorsPre = document.getElementById("errors");
+
+  // اجمع الأخطاء عبر window.onerror
+  const errors = [];
+  window.addEventListener('error', function(ev){
+    errors.unshift((new Date()).toLocaleTimeString() + " — " + (ev.message || ev.error || "Error") + " @ " + (ev.filename || 'unknown') + ":" + (ev.lineno||'') );
+    errorsPre.textContent = errors.join("\n") || "لا أخطاء حتى الآن.";
+  });
+
+  async function checkFile(path){
+    const url = location.origin + "/" + path; // e.g. https://korsan411.github.io/Ai/js/...
+    try {
+      const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+      return { path, ok: res.ok, status: res.status };
+    } catch (err){
+      return { path, ok: false, status: 'network' };
+    }
+  }
+
+  async function runChecks(){
+    filesTable.innerHTML = "";
+    summary.textContent = "جارٍ الفحص... الرجاء الانتظار.";
+    errorsPre.textContent = errors.join("\n") || "لا أخطاء حتى الآن.";
+
+    // تفقد كل الملفات
+    const checks = await Promise.all(paths.map(p => checkFile(p)));
+    checks.forEach(c=>{
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.textContent = c.path;
+      const td2 = document.createElement('td');
+      if (c.ok){
+        td2.innerHTML = '<span class="ok">OK (HTTP ' + c.status + ')</span>';
+      } else {
+        td2.innerHTML = '<span class="bad">خطأ أو غير موجود (' + c.status + ')</span>';
+      }
+      tr.appendChild(td1); tr.appendChild(td2);
+      filesTable.appendChild(tr);
+    });
+
+    // تفحص الكائنات العالمية
+    const checksGlobals = [
+      {name:'cv', found: typeof cv !== 'undefined'},
+      {name:'window.CncAi', found: !!window.CncAi},
+      {name:'window.CncAi.debug', found: !!(window.CncAi && window.CncAi.debug)},
+      {name:'window.CncAi.taskManager', found: !!(window.CncAi && window.CncAi.taskManager)},
+      {name:'initApp (function)', found: typeof window.initApp === 'function'}
+    ];
+    globalsList.innerHTML = "";
+    checksGlobals.forEach(g=>{
+      const li = document.createElement('li');
+      li.innerHTML = '<strong>' + g.name + '</strong> : ' + (g.found ? '<span class="ok">متوفر</span>' : '<span class="bad">غير متوفر</span>');
+      globalsList.appendChild(li);
+    });
+
+    // ملخص بسيط
+    const missing = checks.filter(x=>!x.ok).length;
+    const missingGlobals = checksGlobals.filter(x=>!x.found).length;
+    summary.innerHTML = `<strong>النتيجة:</strong> ${missing} ملفات مفقودة أو لم تُحمّل. — ${missingGlobals} عناصر عالمية غير متاحة (cv / CncAi / initApp).`;
+  }
+
+  document.getElementById('rerun').addEventListener('click', runChecks);
+  document.getElementById('openIndex').addEventListener('click', ()=> {
+    window.location.href = location.origin + "/Ai/index.html";
+  });
+
+  // شغّل الفحص بعد تحميل الصفحة
+  runChecks();
+
+  // تحديث حالة typeof cv كل 1.5 ثانية (قد يحتاج opencv وقت تحميل)
+  setInterval(()=>{
+    const li = Array.from(globalsList.children).find(n => n.textContent.includes('cv'));
+    if (li){
+      li.innerHTML = '<strong>cv</strong> : ' + (typeof cv !== 'undefined' ? '<span class="ok">متاح (object)</span>' : '<span class="bad">غير متاح (undefined)</span>');
+    }
+  },1500);
+
+})();
+</script>
+</body>
+</html>
