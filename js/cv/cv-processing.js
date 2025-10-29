@@ -1,217 +1,128 @@
-// cv-processing.js - Improved OpenCV processing module (ES Module)
-// Exports:
-//  - initCV()
-//  - cvReady (boolean)
-//  - loadImageToMat(imgElement)
-//  - detectEdges(srcMat, method='Canny', sensitivity=50)
-//  - applyColormap(srcMat, mapName='Jet')
-//  - renderMatToCanvas(mat, canvas)
-//  - generateHeightMap(mat, options)
-//  - cleanupCV()
+/* CncAi — cv-processing.js
+   مسؤول عن تحميل الصورة، المعالجة، وكشف الحواف عبر OpenCV
+*/
 
-import { memoryManager } from '../core/memoryManager.js';
-import { taskManager } from '../core/taskManager.js';
+(function() {
+  window.CncAi = window.CncAi || {};
+  const mm = window.CncAi.memoryManager;
+  const dbg = window.CncAi.debug;
 
-export let cvReady = false;
+  let cvReady = false;
+  let srcMat = null;
+  let grayMat = null;
 
-/**
- * initCV - waits for OpenCV runtime to be ready.
- * Resolves when cv.Mat is available or rejects after timeout.
- */
-export function initCV(timeoutMs = 8000) {
-  return new Promise((resolve, reject) => {
-    if (window.cv && window.cv.Mat) {
-      cvReady = true;
-      console.log('[cv-processing] OpenCV already ready.');
-      return resolve(true);
-    }
-    const start = Date.now();
+  // ✅ انتظار تحميل OpenCV
+  function waitForCvReady(callback) {
     const check = setInterval(() => {
-      if (window.cv && window.cv.Mat) {
+      if (window.cv && cv.imread) {
         clearInterval(check);
         cvReady = true;
-        console.log('[cv-processing] OpenCV runtime initialized.');
-        return resolve(true);
-      }
-      if (Date.now() - start > timeoutMs) {
-        clearInterval(check);
-        console.warn('[cv-processing] OpenCV not found within timeout.');
-        return reject(new Error('OpenCV not found'));
+        dbg.info("✅ OpenCV جاهز");
+        callback();
       }
     }, 200);
-  });
-}
-
-/**
- * loadImageToMat - loads an HTMLImageElement or canvas into a cv.Mat (RGBA)
- */
-export function loadImageToMat(imgEl) {
-  if (!cvReady) throw new Error('OpenCV not ready');
-  try {
-    const mat = cv.imread(imgEl); // reads from <img> or <canvas>
-    // ensure 4 channels (RGBA)
-    let out = new cv.Mat();
-    if (mat.type() !== cv.CV_8UC4) {
-      cv.cvtColor(mat, out, cv.COLOR_RGBA2RGBA); // safe copy
-      memoryManager.track(mat);
-    } else {
-      out = mat;
-    }
-    memoryManager.track(out);
-    return out;
-  } catch (e) {
-    console.error('[cv-processing] loadImageToMat error', e);
-    throw e;
   }
-}
 
-/**
- * detectEdges - returns a binary or gray Mat of edges using method.
- * method: 'Canny' | 'Sobel' | 'Laplace'
- * sensitivity: numeric - used as threshold / scale
- */
-export function detectEdges(srcMat, method='Canny', sensitivity=50) {
-  if (!cvReady) throw new Error('OpenCV not ready');
-  if (!srcMat) throw new Error('srcMat is required');
-  try {
-    const gray = new cv.Mat();
-    if (srcMat.channels && srcMat.channels() && srcMat.channels() === 4) {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
-    } else {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGB2GRAY);
-    }
-    memoryManager.track(gray);
-
-    const edges = new cv.Mat();
-    const sens = Math.max(1, Math.min(500, Number(sensitivity) || 50));
-
-    if (method === 'Sobel') {
-      // Sobel produces gradient; convert to absolute
-      const grad = new cv.Mat();
-      const gradX = new cv.Mat();
-      const gradY = new cv.Mat();
-      cv.Sobel(gray, gradX, cv.CV_16S, 1, 0, 3, 1, 0, cv.BORDER_DEFAULT);
-      cv.Sobel(gray, gradY, cv.CV_16S, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
-      cv.convertScaleAbs(gradX, gradX);
-      cv.convertScaleAbs(gradY, gradY);
-      cv.addWeighted(gradX, 0.5, gradY, 0.5, 0, grad);
-      cv.threshold(grad, edges, sens, 255, cv.THRESH_BINARY);
-      memoryManager.track(grad); memoryManager.track(gradX); memoryManager.track(gradY);
-    } else if (method === 'Laplace') {
-      cv.Laplacian(gray, edges, cv.CV_16S, 3, 1, 0, cv.BORDER_DEFAULT);
-      cv.convertScaleAbs(edges, edges);
-      cv.threshold(edges, edges, sens, 255, cv.THRESH_BINARY);
-    } else {
-      // Canny - use sens and sens*2 as thresholds
-      cv.Canny(gray, edges, sens, sens * 2, 3, false);
-    }
-    memoryManager.track(edges);
-    return edges;
-  } catch (e) {
-    console.error('[cv-processing] detectEdges error', e);
-    throw e;
+  // ✅ تحميل الصورة إلى Mat
+  function loadImageToCanvas(file, canvasId) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        try {
+          srcMat = cv.imread(canvasId);
+          grayMat = new cv.Mat();
+          cv.cvtColor(srcMat, grayMat, cv.COLOR_RGBA2GRAY);
+          dbg.info("🖼️ تم تحميل الصورة ومعالجتها بنجاح");
+          resolve(grayMat);
+        } catch (err) {
+          dbg.error("فشل في تحميل الصورة: " + err);
+          reject(err);
+        }
+      };
+      img.onerror = () => reject("خطأ في تحميل الصورة");
+      img.src = URL.createObjectURL(file);
+    });
   }
-}
 
-/**
- * applyColormap - expects a single channel or gray Mat; returns colored Mat (CV_8UC3)
- * mapName: 'Jet' | 'Hot' | 'Cool' | 'Gray'
- */
-export function applyColormap(srcMat, mapName='Jet') {
-  if (!cvReady) throw new Error('OpenCV not ready');
-  try {
-    // ensure single channel 8-bit
-    let gray = new cv.Mat();
-    if (srcMat.type() === cv.CV_8UC4) {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
-    } else if (srcMat.type() === cv.CV_8UC3) {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGB2GRAY);
-    } else {
-      gray = srcMat.clone();
+  // ✅ كشف الحواف (Canny / Sobel / Laplace)
+  function detectEdges(method, sensitivity = 100) {
+    if (!grayMat) {
+      dbg.warn("⚠️ لم يتم تحميل الصورة بعد");
+      return null;
     }
-    memoryManager.track(gray);
 
     const dst = new cv.Mat();
-    let mapId = cv.COLORMAP_JET;
-    const name = (mapName || 'Jet').toLowerCase();
-    if (name === 'hot') mapId = cv.COLORMAP_HOT;
-    else if (name === 'cool') mapId = cv.COLORMAP_OCEAN || cv.COLORMAP_COOL;
-    else if (name === 'gray') mapId = cv.COLORMAP_BONE;
-    // applyColorMap expects CV_8UC1 gray input and outputs CV_8UC3
-    cv.applyColorMap(gray, dst, mapId);
-    memoryManager.track(dst);
+    const low = sensitivity;
+    const high = sensitivity * 2.5;
+
+    switch (method) {
+      case "canny":
+        cv.Canny(grayMat, dst, low, high);
+        break;
+      case "sobel":
+        const gradX = new cv.Mat(), gradY = new cv.Mat();
+        cv.Sobel(grayMat, gradX, cv.CV_16S, 1, 0, 3);
+        cv.Sobel(grayMat, gradY, cv.CV_16S, 0, 1, 3);
+        cv.convertScaleAbs(gradX, gradX);
+        cv.convertScaleAbs(gradY, gradY);
+        cv.addWeighted(gradX, 0.5, gradY, 0.5, 0, dst);
+        mm.safeDelete([gradX, gradY]);
+        break;
+      case "laplace":
+        cv.Laplacian(grayMat, dst, cv.CV_8U, 3);
+        break;
+      default:
+        cv.Canny(grayMat, dst, low, high);
+        break;
+    }
+
+    dbg.info(`🔍 كشف الحواف (${method}) مكتمل`);
     return dst;
-  } catch (e) {
-    console.error('[cv-processing] applyColormap error', e);
-    throw e;
   }
-}
 
-/**
- * renderMatToCanvas - renders a Mat to an HTMLCanvasElement (by id or element)
- */
-export function renderMatToCanvas(mat, canvasOrId) {
-  if (!cvReady) throw new Error('OpenCV not ready');
-  try {
-    let canvasEl = null;
-    if (typeof canvasOrId === 'string') canvasEl = document.getElementById(canvasOrId);
-    else canvasEl = canvasOrId;
-    if (!canvasEl) throw new Error('Canvas element not found');
-    cv.imshow(canvasEl, mat);
-  } catch (e) {
-    console.error('[cv-processing] renderMatToCanvas error', e);
-    throw e;
-  }
-}
-
-/**
- * generateHeightMap - convert a gray or colored Mat to a Float32Array heightmap normalized to [0,1]
- * options: { invert: boolean, normalize: boolean }
- */
-export function generateHeightMap(srcMat, options = {}) {
-  if (!cvReady) throw new Error('OpenCV not ready');
-  try {
-    const { invert=false, normalize=true } = options;
-    const gray = new cv.Mat();
-    if (srcMat.type() === cv.CV_8UC4) {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
-    } else if (srcMat.type() === cv.CV_8UC3) {
-      cv.cvtColor(srcMat, gray, cv.COLOR_RGB2GRAY);
-    } else {
-      gray = srcMat.clone();
+  // ✅ إنشاء Heatmap باستخدام Colormap
+  function createHeatmap(mat, colormap = cv.COLORMAP_JET, canvasId = 'canvasHeatmap') {
+    const colorDst = new cv.Mat();
+    try {
+      cv.applyColorMap(mat, colorDst, colormap);
+      cv.imshow(canvasId, colorDst);
+    } catch (err) {
+      dbg.error("خطأ في إنشاء Heatmap: " + err);
+    } finally {
+      mm.safeDelete(colorDst);
     }
-    memoryManager.track(gray);
-
-    const width = gray.cols, height = gray.rows;
-    const result = new Float32Array(width * height);
-    for (let y=0; y<height; y++){
-      for (let x=0; x<width; x++){
-        const v = gray.ucharPtr(y, x)[0] / 255.0;
-        result[y * width + x] = invert ? 1.0 - v : v;
-      }
-    }
-    if (normalize) {
-      // ensure min 0 max 1
-      let min=1, max=0;
-      for (let i=0;i<result.length;i++){ if(result[i]<min)min=result[i]; if(result[i]>max)max=result[i]; }
-      const range = Math.max(1e-6, max - min);
-      for (let i=0;i<result.length;i++){ result[i] = (result[i]-min)/range; }
-    }
-    return { data: result, width, height };
-  } catch (e) {
-    console.error('[cv-processing] generateHeightMap error', e);
-    throw e;
   }
-}
 
-/**
- * cleanupCV - delete tracked mats
- */
-export function cleanupCV() {
-  try {
-    memoryManager.cleanup();
-    console.log('[cv-processing] cleaned up tracked Mats');
-  } catch (e) {
-    console.warn('[cv-processing] cleanup error', e);
+  // ✅ عرض الصورة في canvas آخر
+  function showMat(mat, canvasId) {
+    try {
+      cv.imshow(canvasId, mat);
+    } catch (err) {
+      dbg.error("عرض الصورة فشل: " + err);
+    }
   }
-}
+
+  // ✅ تنظيف الموارد
+  function cleanup() {
+    mm.safeDelete([srcMat, grayMat]);
+    srcMat = null;
+    grayMat = null;
+    dbg.info("🧹 تم تنظيف موارد OpenCV");
+  }
+
+  // واجهة عامة
+  window.CncAi.cv = {
+    waitForCvReady,
+    loadImageToCanvas,
+    detectEdges,
+    createHeatmap,
+    showMat,
+    cleanup,
+    get grayMat() { return grayMat; }
+  };
+})();
