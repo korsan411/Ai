@@ -1,66 +1,135 @@
-<!doctype html>
+<!DOCTYPE html>
+<!-- CncAi — Modular Stable Version 3.0 | October 2025 -->
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CncAi — GitHub Pages Ready</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CNC AI — Modular Stable 3.0</title>
 
-  <!-- OpenCV -->
-  <script src="https://docs.opencv.org/4.x/opencv.js"></script>
-  <script type="module" src="https://unpkg.com/three@0.160.0/build/three.module.js"></script>
+  <!-- 🪶 External Libraries -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <!-- 🧭 Styles -->
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
-  <div id="cncai-root">⏳ جاري التحميل...</div>
 
-  <!-- تحميل ملفات JS المحلية -->
-  <script src="/Ai/js/cv-processing.js"></script>
-  <script src="/Ai/js/ui-init.js"></script>
-  <script src="/Ai/js/debugOverlay.js"></script>
-  <script src="/Ai/js/taskManager.js"></script>
-  <script src="/Ai/js/simulation3d.js"></script>
+<body>
+  <header class="header">
+    <h1>CNC AI</h1>
+    <div class="theme-toggle">
+      <button id="btnTheme">🌓</button>
+    </div>
+  </header>
+
+  <!-- 🖼️ Image Upload -->
+  <section class="upload-section">
+    <input type="file" id="imgInput" accept="image/*" />
+    <canvas id="canvasOriginal"></canvas>
+  </section>
+
+  <!-- 📊 Tabs -->
+  <nav class="tabs">
+    <button data-tab="original" class="active">الصورة الأصلية</button>
+    <button data-tab="heatmap">Heatmap</button>
+    <button data-tab="contour">Contour</button>
+    <button data-tab="topview">Top View</button>
+    <button data-tab="simulation">3D Simulation</button>
+  </nav>
+
+  <!-- 🔍 Views -->
+  <section id="tab-original" class="tab-content active">
+    <canvas id="canvasOriginalView"></canvas>
+  </section>
+
+  <section id="tab-heatmap" class="tab-content">
+    <canvas id="canvasHeatmap"></canvas>
+    <div class="colormap-buttons">
+      <button data-map="jet">Jet</button>
+      <button data-map="hot">Hot</button>
+      <button data-map="cool">Cool</button>
+      <button data-map="gray">Gray</button>
+    </div>
+  </section>
+
+  <section id="tab-contour" class="tab-content">
+    <canvas id="canvasContour"></canvas>
+  </section>
+
+  <section id="tab-topview" class="tab-content">
+    <canvas id="canvasTopView"></canvas>
+  </section>
+
+  <section id="tab-simulation" class="tab-content">
+    <div id="threeContainer"></div>
+    <div class="controls-3d">
+      <button id="btnRotate">⟳ تدوير</button>
+      <button id="btnZoomIn">+</button>
+      <button id="btnZoomOut">−</button>
+    </div>
+  </section>
+
+  <!-- ⚙️ Machine Settings -->
+  <section class="settings">
+    <h2>إعدادات الماكينة</h2>
+    <div class="machine-group">
+      <label>النوع:</label>
+      <select id="machineType">
+        <option value="router">Router</option>
+        <option value="laser">Laser</option>
+      </select>
+    </div>
+
+    <div class="machine-advanced">
+      <button id="btnAdvanced">⚙️ الإعدادات المتقدمة</button>
+    </div>
+  </section>
+
+  <!-- 🧩 Buttons -->
+  <footer class="actions">
+    <button id="btnGen">🛠️ توليد G-code</button>
+    <button id="btnSim">🎬 تشغيل المحاكاة</button>
+    <button id="btnDbg">🐞 Debug</button>
+  </footer>
+
+  <!-- 🧠 Debug Overlay -->
+  <div id="debugOverlay" class="debug-overlay">
+    <div class="debug-header">
+      <span>🧩 Debug Console</span>
+      <button id="dbgToggleSize">⤢</button>
+      <button id="dbgClear">🧹</button>
+      <button id="dbgClose">❌</button>
+    </div>
+    <pre id="debugLog"></pre>
+  </div>
+
+  <!-- 💾 Progress + Output -->
+  <div id="progressOverlay" class="progress-overlay">
+    <div id="progressText">جارٍ المعالجة...</div>
+  </div>
+
+  <textarea id="gcodeOut" readonly></textarea>
+
+  <!-- ⚙️ Script loading (traditional order) -->
+  <script src="js/helpers/utils.js"></script>
+  <script src="js/helpers/validators.js"></script>
+
+  <script src="js/core/taskManager.js"></script>
+  <script src="js/core/memoryManager.js"></script>
+  <script src="js/core/debugOverlay.js"></script>
+
+  <script src="js/cv/cv-processing.js"></script>
+  <script src="js/gcode/gcode-generator.js"></script>
+  <script src="js/three/simulation3d.js"></script>
+
+  <script src="js/ui/ui-controls.js"></script>
+  <script src="js/ui/ui-init.js"></script>
 
   <script>
-    const root = document.getElementById('cncai-root');
-
-    // الانتظار حتى يكون OpenCV جاهز
-    function waitForCV() {
-      return new Promise((resolve, reject) => {
-        const check = setInterval(() => {
-          if (cv && cv.Mat) {
-            clearInterval(check);
-            resolve();
-          }
-        }, 50);
-        setTimeout(() => {
-          clearInterval(check);
-          reject('OpenCV لم يتم تحميله خلال الوقت المحدد');
-        }, 15000);
-      });
-    }
-
-    async function initApp() {
-      try {
-        root.innerText = '⏳ انتظار OpenCV...';
-        await waitForCV();
-        root.innerText = '✅ OpenCV جاهز!';
-
-        // استدعاء جميع الدوال من window بعد تحميل OpenCV
-        if (window.initCV) window.initCV();
-        if (window.initDebugOverlay) window.initDebugOverlay();
-        if (window.initUI) window.initUI();
-        if (window.initSimulation) window.initSimulation();
-        if (window.taskManager) window.CncAi = { taskManager: window.taskManager };
-
-        root.innerText = '✅ CncAi جاهز للعمل!';
-        console.log('✅ CncAi جاهز للعمل!');
-      } catch (err) {
-        root.innerText = '❌ فشل تحميل OpenCV';
-        console.error(err);
-      }
-    }
-
-    initApp();
+    document.addEventListener("DOMContentLoaded", () => {
+      initApp(); // دالة البدء من ui-init.js
+    });
   </script>
 </body>
 </html>
