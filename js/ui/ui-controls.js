@@ -1,93 +1,109 @@
-// ui-controls.js - core UI logic connecting CV, G-code, and Simulation
-import { loadImageToMat, detectEdges, applyColormap, renderMatToCanvas, generateHeightMap, cleanupCV } from '../cv/cv-processing.js';
-import { generateRasterGcode, generateContourGcode, generateLaserGcode } from '../gcode/gcode-generator.js';
-import { renderGcodePreview, clearSimulation, setScaleZ } from '../three/simulation3d.js';
-import { memoryManager } from '../core/memoryManager.js';
-import { qs, show, hide, hideAll, setText, downloadFile } from './ui-helpers.js';
+/* CncAi — ui-controls.js
+   تفاعل المستخدم مع الواجهة: الأزرار، التبويبات، التبديل بين المعاينات.
+*/
 
-let currentImage = null;
-let currentEdges = null;
-let currentHeatmap = null;
+(function() {
+  window.CncAi = window.CncAi || {};
+  const dbg = window.CncAi.debug;
+  const cvCore = window.CncAi.cv;
+  const gcodeGen = window.CncAi.gcodeGen;
+  const sim = window.CncAi.sim3D;
+  const tm = window.CncAi.taskManager;
 
-export function updateView(mode){
-  const map = {
-    original: ['canvasOriginal'],
-    heatmap: ['canvasHeatmap'],
-    contour: ['canvasContour'],
-    topview: ['canvasTopview'],
-    simulation: ['threeContainer']
+  // 🧭 تبديل التبويبات
+  function setupTabs() {
+    const buttons = document.querySelectorAll('.tabs button');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.getElementById(`tab-${target}`).classList.add('active');
+      });
+    });
+  }
+
+  // 🎨 تبديل الـ Colormap
+  function setupColormapButtons() {
+    const cmapBtns = document.querySelectorAll('.colormap-buttons button');
+    cmapBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const map = btn.dataset.map;
+        let cmapType = cv.COLORMAP_JET;
+        switch(map) {
+          case 'hot': cmapType = cv.COLORMAP_HOT; break;
+          case 'cool': cmapType = cv.COLORMAP_COOL; break;
+          case 'gray': cmapType = cv.COLORMAP_BONE; break;
+          default: cmapType = cv.COLORMAP_JET; break;
+        }
+        const gray = cvCore.grayMat;
+        if (gray) {
+          cvCore.createHeatmap(gray, cmapType, 'canvasHeatmap');
+          dbg.info("🎨 تم تغيير خريطة الألوان إلى " + map);
+        }
+      });
+    });
+  }
+
+  // 🔄 دوران مشهد 3D
+  function setup3DControls() {
+    const btnRot = document.getElementById('btnRotate');
+    if (btnRot) {
+      btnRot.addEventListener('click', () => sim.rotateScene(0.1));
+    }
+    const zIn = document.getElementById('btnZoomIn');
+    const zOut = document.getElementById('btnZoomOut');
+    if (zIn && sim.camera) zIn.addEventListener('click', ()=>{ sim.camera.position.z -= 10; });
+    if (zOut && sim.camera) zOut.addEventListener('click', ()=>{ sim.camera.position.z += 10; });
+  }
+
+  // ⚙️ تشغيل المعالجة وتوليد الكود
+  function setupButtons() {
+    const imgInput = document.getElementById('imgInput');
+    const btnGen = document.getElementById('btnGen');
+    const btnSim = document.getElementById('btnSim');
+    const gOut = document.getElementById('gcodeOut');
+
+    if (imgInput) {
+      imgInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) {
+          tm.addTask(async () => {
+            await cvCore.loadImageToCanvas(file, 'canvasOriginalView');
+            const edges = cvCore.detectEdges('canny', 100);
+            cvCore.createHeatmap(edges);
+          }, {name: 'تحميل الصورة'});
+        }
+      });
+    }
+
+    if (btnGen) {
+      btnGen.addEventListener('click', () => {
+        tm.addTask(() => {
+          const gray = cvCore.grayMat;
+          if (!gray) { dbg.error("لم يتم تحميل الصورة بعد"); return; }
+          const g = gcodeGen.generateRasterGcode(gray, 3);
+          gOut.value = g;
+          dbg.info("✅ تم توليد G-code بنجاح");
+        }, {name:'توليد Gcode'});
+      });
+    }
+
+    if (btnSim) {
+      btnSim.addEventListener('click', () => {
+        tm.addTask(() => {
+          sim.init3D();
+          sim.drawGcodePath(gOut.value);
+        }, {name:'محاكاة 3D'});
+      });
+    }
+  }
+
+  window.CncAi.ui = {
+    setupTabs,
+    setupButtons,
+    setupColormapButtons,
+    setup3DControls
   };
-  // hide all
-  ['canvasOriginal','canvasHeatmap','canvasContour','canvasTopview','threeContainer'].forEach(id=>{ const e=qs(id); if(e) e.style.display='none'; });
-  const showIds = map[mode] || ['canvasOriginal'];
-  showIds.forEach(id=>{ const e=qs(id); if(e) e.style.display='block'; });
-}
-
-export async function onImageLoaded(file){
-  try{
-    const img = new Image();
-    img.onload = async ()=>{ 
-      // draw to original canvas to keep same behavior
-      const c = qs('canvasOriginal');
-      c.width = img.width; c.height = img.height;
-      const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0);
-      // load mat via cv module
-      try{
-        currentImage = loadImageToMat(c);
-        console.log('[UI] Image loaded into Mat');
-        // auto-generate initial heatmap
-        const sensitivity = Number(qs('edgeSensitivity') ? qs('edgeSensitivity').value : 50);
-        await processHeatmap('Canny', sensitivity, qs('colormap') ? qs('colormap').value : 'Jet');
-      }catch(e){ console.warn('CV loadImageToMat failed', e); }
-    };
-    img.src = URL.createObjectURL(file);
-  }catch(e){ console.error('onImageLoaded error', e); }
-}
-
-export async function processHeatmap(method='Canny', sensitivity=50, colormap='Jet'){
-  if(!currentImage){ console.warn('No image'); return; }
-  try{
-    if(currentEdges){ memoryManager.safeDelete(currentEdges); currentEdges = null; }
-    if(currentHeatmap){ memoryManager.safeDelete(currentHeatmap); currentHeatmap = null; }
-    currentEdges = detectEdges(currentImage, method, sensitivity);
-    currentHeatmap = applyColormap(currentEdges, colormap);
-    renderMatToCanvas(currentHeatmap, 'canvasHeatmap');
-    renderMatToCanvas(currentEdges, 'canvasContour');
-    console.log('[UI] Heatmap & Contour updated');
-  }catch(e){ console.error('processHeatmap error', e); }
-}
-
-export async function processTopView(scaleZ=1.0, invert=false){
-  if(!currentHeatmap){ console.warn('No heatmap'); return; }
-  try{
-    const hm = generateHeightMap(currentHeatmap, {invert});
-    // topview currently render heatmap to canvasTopview
-    renderMatToCanvas(currentHeatmap, 'canvasTopview');
-    // optionally pass height map to 3D preview
-    console.log('[UI] TopView generated', hm);
-  }catch(e){ console.error('processTopView', e); }
-}
-
-export function generateGcode(type='router'){
-  if(!currentHeatmap){ console.warn('No heatmap'); return; }
-  try{
-    const hm = generateHeightMap(currentHeatmap, {invert:false});
-    let gcode = '';
-    if(type==='router') gcode = generateRasterGcode(hm, { pixelSize:0.5, invertZ:true });
-    else if(type==='laser') gcode = generateLaserGcode(hm, { pixelSize:0.5, invert:true });
-    else gcode = '';
-    // show in debug output area if exists
-    const out = qs('gcodeOut');
-    if(out) out.value = gcode;
-    // render to 3D
-    clearSimulation();
-    renderGcodePreview(gcode);
-    // download option
-    downloadFile(type + '_gcode.nc', gcode);
-    console.log('[UI] G-code generated');
-  }catch(e){ console.error('generateGcode error', e); }
-}
-
-export function cleanupUI(){
-  try{ cleanupCV(); memoryManager.cleanup(); clearSimulation(); }catch(e){ console.warn(e); }
-}
+})();
