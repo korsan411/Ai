@@ -1,6 +1,3 @@
-/* Debug Overlay — simple logging console with controls
-   Exposes window.CncAi.debug for programmatic logging.
-*/
 
 (function(){
   var overlay, logArea, btnClear, btnClose, btnToggleSize;
