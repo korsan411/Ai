@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<!-- CncAi — Version 2.6.0 (Structured & Local Libs, October 2025) -->
+<!-- CncAi — Version 2.6.0 (Structured  nov 2025) -->
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -36,12 +36,6 @@
           </select>
         </div>
 
-        <!-- Edge sensitivity slider -->
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-          <label style="margin:0;color:#9bb0c8">حساسية الحواف:</label>
-          <input id="edgeSensitivity" type="range" min="0.1" max="1.0" step="0.05" value="0.33" style="flex:1">
-          <div id="edgeValue" style="min-width:44px;text-align:center;color:#cfeaf2">0.33</div>
-        </div>
 
         <!-- ========== قسم ملفات STL و SVG و DXF ========== -->
         <div class="file-format-section">
@@ -111,6 +105,14 @@
           <div class="small-meta" style="text-align: center; margin-top: 8px;">
             التغيير يطبق على: Heatmap • Top View • Contours • كل المعاينات
           </div>
+  </div>
+
+        <!-- Edge sensitivity slider -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <label style="margin:0;color:#9bb0c8">حساسية الحواف:</label>
+          <input id="edgeSensitivity" type="range" min="0.1" max="1.0" step="0.05" value="0.33" style="flex:1">
+          <div id="edgeValue" style="min-width:44px;text-align:center;color:#cfeaf2">0.33</div>
+        </div>
         </div>
 
         <div class="tab-buttons" role="tablist">
@@ -172,6 +174,13 @@
         <button data-mode="heatmap">الكثافة</button>
         <button data-mode="topview">الارتفاع</button>
       </div>
+<!-- اختيار خريطة الألوان -->
+<div class="colormap-selector">
+  <button data-map="JET" class="active">Jet</button>
+  <button data-map="HOT">Hot</button>
+  <button data-map="COOL">Cool</button>
+  <button data-map="TURBO">Turbo</button>
+</div>
     </div>
     
     <!-- الجزء الأيمن: النتائج -->
@@ -522,28 +531,9 @@
   </div>
 
   <div id="toast"></div>
-
-  
-
-
 <!-- ThreeD viewer integration (injected) -->
-
-
-
-
 <!-- Three.js r170 + SVG/DXF loaders for 2D Vector Preview (injected) -->
-
-
-
-
-
-
-
-
-
 <!-- Clean Debug System (CncAi 2.4.7) -->
-
-
 <div id="cnc-debug-overlay" class="collapsed" aria-hidden="true" aria-live="polite">
   <div id="cnc-debug-header">
     <div style="display:flex;align-items:center;gap:8px;">
@@ -568,19 +558,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
   <!-- مكتبات -->
-  <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
+  <script src="https://docs.opencv.org/4.x/opencv.js" async></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
@@ -589,15 +568,10 @@
 
 <!-- CncAi modules -->
 <script src="assets/cnc-core.js"></script>
-
-
-
 <script src="assets/cnc-3d.js"></script>
 <script src="assets/cnc-gcode.js"></script>
 <script src="assets/cnc-debug.js"></script>
-
 <script src="assets/script.js" defer></script>
-
 <script src="assets/cnc-ai.js"></script>
 </body>
 </html>
