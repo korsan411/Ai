@@ -1,5 +1,5 @@
 // ===============================================================
-// 🧠 CncAi — Router G-code Generator (v2.5.1 Final)
+// 🧠 CncAi — Router G-code Generator (v2.5.1 Final + Compatibility)
 // تحسينات: Precision + SafeZ ذكي + Header/Footer + Buffer + Timing + Safety
 // ===============================================================
 
@@ -8,7 +8,7 @@ function fmt(v, p = 3) {
 }
 
 /**
- * توليد كود الـ Raster (النحت الخشبي)
+ * 🪵 توليد كود الـ Raster (النحت الخشبي)
  */
 function generateRouterRasterGcode() {
   if (!grayMat || !contour) throw new Error("لا توجد صورة جاهزة للمعالجة");
@@ -78,7 +78,6 @@ function generateRouterRasterGcode() {
         const reverse = (y / stepOver) % 2 !== 0;
         if (reverse) rowPoints.reverse();
 
-        // move to start
         moveSafeZ(safeZ);
         buffer.push(`G0 X${fmt(rowPoints[0].x)} Y${fmt(rowPoints[0].y)}`);
         moveSafeZ(rowPoints[0].z);
@@ -93,7 +92,7 @@ function generateRouterRasterGcode() {
         totalLen += calculateRowLength(rowPoints);
       }
 
-      // flush buffer to prevent overload
+      // flush buffer كل فترة
       if (buffer.length > 5000) {
         lines.push(...buffer);
         buffer.length = 0;
@@ -125,7 +124,7 @@ function generateRouterRasterGcode() {
 }
 
 /**
- * توليد كود الـ Contour (حدود الشكل)
+ * ✂️ توليد كود الـ Contour (حدود الشكل)
  */
 function generateRouterContourGcode() {
   if (!grayMat || !contour) throw new Error("لا توجد بيانات حواف");
@@ -207,9 +206,10 @@ function generateRouterContourGcode() {
     console.error('❌ خطأ في توليد كود Contour:', e);
     throw e;
   }
-  // دعم التوافق مع الاسم القديم
-const generateContourGcode = generateRouterContourGcode;
-const generateRasterGcode  = generateRouterRasterGcode;// دعم التوافق مع الاسم القديم
+}
+
+// ===============================================================
+// ✅ دعم التوافق مع الإصدارات السابقة
+// ===============================================================
 const generateContourGcode = generateRouterContourGcode;
 const generateRasterGcode  = generateRouterRasterGcode;
-}
