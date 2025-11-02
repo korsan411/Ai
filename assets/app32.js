@@ -1,6 +1,6 @@
 /* ==========================================================
    🧠 CncAi / Ai-main/assets/app32.js
-   🛡️ Safe Init Layer — DOM + OpenCV + Element Protection
+   🛡️ Safe Init Layer — DOM + OpenCV + Element Protection (v2)
    ========================================================== */
 
 function safeGet(id) {
@@ -13,23 +13,29 @@ function safeGet(id) {
 }
 
 function initWhenReady() {
-  // انتظار تهيئة OpenCV
+  // ✅ تأكد من جاهزية OpenCV
   if (typeof cv === "undefined" || !cv || !cv.Mat) {
     console.log("⏳ انتظار تهيئة OpenCV...");
     setTimeout(initWhenReady, 200);
     return;
   }
 
-  // تأكد من وجود عناصر التحليل
-  const canvas = safeGet("analysisCanvas");
-  if (!canvas) {
-    console.warn("⚠️ لم يتم العثور على canvas الخاص بالتحليل");
+  // ✅ تحقق من وجود عناصر الواجهة
+  const imageInput = safeGet("imageInput");
+  const previewContainer = safeGet("previewContainer");
+  const analysisCanvas = safeGet("analysisCanvas");
+
+  if (!imageInput || !previewContainer || !analysisCanvas) {
+    console.log("⏳ انتظار ظهور عناصر الواجهة...");
+    setTimeout(initWhenReady, 300);
     return;
   }
 
-  const ctx = canvas.getContext("2d");
+  // ✅ تحقق من جاهزية الـ Canvas
+  const ctx = analysisCanvas.getContext("2d");
   if (!ctx) {
     console.warn("⚠️ لم يتم إنشاء سياق الرسم للـ Canvas");
+    setTimeout(initWhenReady, 300);
     return;
   }
 
@@ -45,7 +51,7 @@ function initWhenReady() {
   }
 }
 
-// تأكد من أن DOM جاهز
+// ✅ تأكد من جاهزية DOM
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initWhenReady);
 } else {
@@ -55,40 +61,28 @@ if (document.readyState === "loading") {
 /* ==========================================================
    👇 بقية محتوى app32.js الأصلي (لم يتم تغييره)
    ========================================================== */
-
-// *** بداية الكود الأصلي ***
 (function () {
-  // كل وظائفك الأصلية تبقى هنا كما هي
+  // وظائفك الأصلية هنا كما هي
 
-  // مثال على بعض أقسام الكود الموجودة لديك:
-  // تعريف دوال المعالجة، عرض النتائج، أو الربط مع واجهة المستخدم.
-  // هذه الأسطر تمثل الكود الأصلي ولا يتم التعديل عليها نهائيًا.
-
-  // مثال (اترك كما هو):
   window.initApp = function () {
     console.log("🔧 initApp بدأ التنفيذ الفعلي للتطبيق");
 
-    // هنا يتم استدعاء الوظائف الأصلية الخاصة بالتحليل والعرض
+    // جلب العناصر بأمان
     const imageInput = safeGet("imageInput");
     const analysisCanvas = safeGet("analysisCanvas");
     const previewContainer = safeGet("previewContainer");
 
-    if (!imageInput || !analysisCanvas) {
+    if (!imageInput || !analysisCanvas || !previewContainer) {
       console.warn("⚠️ بعض العناصر غير موجودة — تأجيل التحليل");
       return;
     }
 
-    // أمثلة منطقية (اترك الكود الأصلي الخاص بك)
+    // الكود الأصلي الذي يتعامل مع واجهة المستخدم أو المعالجة
+    // مثال:
     // setupEventListeners();
     // initialize3DView();
     // loadUserPreferences();
   };
 
-  // يمكن أن توجد دوال أخرى:
-  // function setupEventListeners() { ... }
-  // function processImage() { ... }
-  // function updatePreview() { ... }
-
   console.log("🧩 app32.js جاهز.");
 })();
-// *** نهاية الكود الأصلي ***
