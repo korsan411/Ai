@@ -207,4 +207,9 @@ function generateRouterContourGcode() {
     console.error('❌ خطأ في توليد كود Contour:', e);
     throw e;
   }
+  // دعم التوافق مع الاسم القديم
+const generateContourGcode = generateRouterContourGcode;
+const generateRasterGcode  = generateRouterRasterGcode;// دعم التوافق مع الاسم القديم
+const generateContourGcode = generateRouterContourGcode;
+const generateRasterGcode  = generateRouterRasterGcode;
 }
