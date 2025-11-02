@@ -35,7 +35,21 @@ function initButtons() {
         }, 'توليد G-code سريع');
       });
     }
-
+// زر التوليد المزدوج (Contour + Raster)
+const btnGenCombo = document.getElementById('btnGenCombo');
+if (btnGenCombo) {
+  btnGenCombo.addEventListener('click', () => {
+    try {
+      showToast('🔄 جاري توليد الكود المزدوج...', 2500);
+      const gcode = generateComboGcode(); // ← يستدعي الوظيفة الجديدة
+      downloadGcodeFile(gcode, 'CncAi_Combo.gcode');
+      showToast('✅ تم حفظ كود Combo بنجاح!', 2500);
+    } catch (err) {
+      console.error('⚠️ خطأ أثناء التوليد المزدوج:', err);
+      showToast('❌ فشل في توليد الكود المزدوج', 4000);
+    }
+  });
+}
     const btnContour = document.getElementById('btnContour');
     if (btnContour) {
       btnContour.addEventListener('click', () => {
