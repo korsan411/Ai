@@ -163,41 +163,47 @@ function initButtons() {
     }
 
     const btnDownload = document.getElementById('btnDownload');
-    if (btnDownload) {
-      btnDownload.addEventListener('click', () => {
-        const text = document.getElementById('gcodeOut').value;
-        if (!text) { 
-          showToast("لا يوجد G-code لتحميله"); 
-          return; 
-        }
-        try {
-          const now = new Date();
-          const dateStr = now.toISOString().slice(0, 19).replace(/[:.]/g, '-');
-          const machineType = document.getElementById('machineCategory').value;
-          const filename = `${machineType}_output_${dateStr}.gcode`;
-          const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; 
-          a.download = filename; 
-          document.body.appendChild(a); 
-          a.click(); 
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          showToast(`تم تحميل الملف: ${filename}`);
-        } catch (error) {
-          console.error('خطأ في تحميل الملف:', error);
-          showToast('فشل في تحميل الملف');
-        }
-      });
+if (btnDownload) {
+  // إزالة أي مستمع قديم قبل إضافة الجديد
+  btnDownload.replaceWith(btnDownload.cloneNode(true));
+  const newBtn = document.getElementById('btnDownload');
+
+  newBtn.addEventListener('click', () => {
+    // منع النقر المزدوج
+    if (newBtn.classList.contains('downloading')) return;
+    newBtn.classList.add('downloading');
+
+    const text = document.getElementById('gcodeOut').value;
+    if (!text) { 
+      showToast("⚠️ لا يوجد G-code لتحميله"); 
+      newBtn.classList.remove('downloading');
+      return; 
     }
 
-    const btnLaserDownload = document.getElementById('btnLaserDownload');
-    if (btnLaserDownload) {
-      btnLaserDownload.addEventListener('click', () => {
-        document.getElementById('btnDownload').click();
-      });
+    try {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 19).replace(/[:.]/g, '-');
+      const machineType = document.getElementById('machineCategory').value;
+      const filename = `${machineType}_output_${dateStr}.gcode`;
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = filename; 
+      document.body.appendChild(a); 
+      a.click(); 
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`✅ تم تحميل الملف: ${filename}`);
+    } catch (error) {
+      console.error('❌ خطأ في تحميل الملف:', error);
+      showToast('فشل في تحميل الملف');
     }
+
+    // إتاحة التحميل مجددًا بعد ثانيتين
+    setTimeout(() => newBtn.classList.remove('downloading'), 2000);
+  });
+}
 
     const btnDownload3D = document.getElementById('btnDownload3D');
     if (btnDownload3D) {
