@@ -315,22 +315,23 @@
               <option value="#8b5a2b">ماهوجني</option>
             </select>
           </div>
-
-          <div class="button-group">
-            <div class="button-row">
-              <button id="btnGen" class="primary">⚡ توليد G-code (Raster)</button>
-              <button id="btnQuick" class="secondary">🧪 اختبار سريع</button>
-            </div>
-
-            <div style="margin-top:8px">
-              <label for="contourMode">نطاق الحواف (Contour)</label>
-              <select id="contourMode">
-           <!-- 🧠 زر Combo في صف مستقل -->
+<!-- 🧠 زر Combo في صف مستقل -->
 <div class="combo-row">
   <button id="btnCombo" class="btn-action highlight-combo">
     🧠 توليد Combo (Contour + Raster)
   </button>
 </div>
+ 
+          <div class="button-group">
+            <div class="button-row">
+              <button id="btnGen" class="primary">⚡ توليد G-code (Raster)</button>
+         <button id="btnQuick" class="secondary">🧪 اختبار سريع</button>
+            </div>
+
+            <div style="margin-top:8px">
+              <label for="contourMode">نطاق الحواف (Contour)</label>
+              <select id="contourMode">
+           
      <option value="outer">الخارجية فقط</option>
                 <option value="all">كل الحواف</option>
               </select>
@@ -557,6 +558,13 @@
 
 <button id="cnc-debug-btn" aria-label="Open debug">🐞</button>
 
+
+
+
+
+
+
+
   <!-- مكتبات -->
   <script src="https://docs.opencv.org/4.x/opencv.js" async></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -600,9 +608,12 @@
 <script src="assets/simulation-top30.js"></script>
 <script src="assets/3d-threed-viewer31.js"></script>
 <script src="assets/app32.js"></script>
+
 <script src="assets/cnc-gcode.js"></script>
 <script src="assets/cnc-debug.js"></script>
 <script src="assets/script.js" defer></script>
+
+
 <script src="assets/cnc-ai.js"></script>
 </body>
 </html>
