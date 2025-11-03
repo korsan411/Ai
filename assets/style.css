@@ -646,7 +646,23 @@
         border-color: #06b6d4; 
         box-shadow: 0 6px 16px rgba(6, 182, 212, 0.4);
     }
-  
+
+  .combo-row {
+  margin-top: 12px;
+  text-align: center;
+}
+.highlight-combo {
+  background: linear-gradient(90deg, #ff6b6b, #feca57);
+  color: #fff;
+  font-weight: bold;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+  transition: 0.3s;
+}
+.highlight-combo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 200, 0, 0.7);
+}
 /* dbgCloseLegacy styling */
 #dbgCloseLegacy { background: rgba(3,37,58,0.95); color:#cfeaf2; border:1px solid rgba(255,255,255,0.04); padding:6px 8px; border-radius:8px; cursor:pointer; font-size:13px; }
 #dbgCloseLegacy:hover { background: rgba(255,50,50,0.95); }
