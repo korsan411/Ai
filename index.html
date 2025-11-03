@@ -113,17 +113,27 @@
           <input id="edgeSensitivity" type="range" min="0.1" max="1.0" step="0.05" value="0.33" style="flex:1">
           <div id="edgeValue" style="min-width:44px;text-align:center;color:#cfeaf2">0.33</div>
         </div>
-        </div>
+        <!-- مجموعة الأزرار -->
+<div class="button-group">
 
-        <div class="tab-buttons" role="tablist">
-          <button data-tab="original" class="active">🖼️ الأصلية</button>
-          <button data-tab="heatmap">🔥 Heatmap</button>
-          <button data-tab="contour">📐 Contours</button>
-          <button data-tab="topview">🔝 Top View</button>
-          <button data-tab="threed">🧊 3D Models</button>
-          <button data-tab="simulation">🎬 المحاكاة</button>
-<button data-tab="analysis">🧠 التحليل</button>
-        </div>
+  <!-- الصف الأول: توليد G-code واختبار سريع -->
+  <div class="button-row">
+    <button id="btnGen" class="btn primary">
+      ⚡ توليد G-code (Raster)
+    </button>
+    <button id="btnQuick" class="btn secondary">
+      🧪 اختبار سريع
+    </button>
+  </div>
+
+  <!-- الصف الثاني: توليد Combo -->
+  <div class="combo-row">
+    <button id="btnCombo" class="btn highlight-combo">
+      🧠 توليد Combo (Contour + Raster)
+    </button>
+  </div>
+
+</div>
 
         <div id="original" class="tab-content active">
           <div class="canvas-placeholder" id="originalPlaceholder">الصورة الأصلية ستظهر هنا</div>
