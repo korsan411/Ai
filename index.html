@@ -325,20 +325,20 @@
             <div style="margin-top:8px">
               <label for="contourMode">نطاق الحواف (Contour)</label>
               <select id="contourMode">
-                <option value="outer">الخارجية فقط</option>
+           <!-- 🧠 زر Combo في صف مستقل -->
+<div class="combo-row">
+  <button id="btnCombo" class="btn-action highlight-combo">
+    🧠 توليد Combo (Contour + Raster)
+  </button>
+</div>
+     <option value="outer">الخارجية فقط</option>
                 <option value="all">كل الحواف</option>
               </select>
               <div style="height:8px"></div>
               <div class="button-row">
                 <button id="btnContour" class="secondary">🌀 توليد G-code (Contour)</button>
                 <button id="btnDownload" class="secondary">💾 تحميل G-code</button>
-          <!-- 🧠 زر Combo في صف مستقل -->
-<div class="combo-row">
-  <button id="btnCombo" class="btn-action highlight-combo">
-    🧠 توليد Combo (Contour + Raster)
-  </button>
-</div> 
-   </div>
+              </div>
             </div>
           </div>
         </div>
@@ -556,13 +556,6 @@
 </div>
 
 <button id="cnc-debug-btn" aria-label="Open debug">🐞</button>
-
-
-
-
-
-
-
 
   <!-- مكتبات -->
   <script src="https://docs.opencv.org/4.x/opencv.js" async></script>
