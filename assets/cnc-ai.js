@@ -1,23 +1,5 @@
-// === CncAi — Analysis Module v3.1.0 (Fixed Errors + Enhanced Auto-Attach) ===
+// === CncAi — Analysis Module v3.1.3 (Fixed Annoying Messages) ===
 window.Analysis = (function () {
-  const Config = {
-    CANNY_THRESHOLD: [80, 150],
-    ANALYSIS_TIMEOUT: 30000,
-    DEFAULT_COLORMAP: "JET",
-    AUTO_ATTACH_POLL_INTERVAL: 500, // زيادة الفاصل
-    MAX_AUTO_ATTACH_TRIES: 60, // تقليل المحاولات
-    EXPORT_TYPES: ['json', 'csv', 'image', 'report']
-  };
-
-  const EventTypes = {
-    ANALYSIS_START: 'analysis_start',
-    ANALYSIS_COMPLETE: 'analysis_complete',
-    ERROR: 'error',
-    IMAGE_LOADED: 'image_loaded',
-    PREVIEW_UPDATED: 'preview_updated',
-    AUTO_ATTACH_FAILED: 'auto_attach_failed'
-  };
-
   const Module = {
     canvas: null,
     ctx: null,
@@ -27,241 +9,173 @@ window.Analysis = (function () {
     ready: false,
     autoAttached: false,
     currentMap: "JET",
-    currentAnalysis: null,
-    _events: {},
-    _autoAttachInterval: null,
+    _initialized: false,
+    _loadImageRetryCount: 0,
+    _maxRetryCount: 5,
 
     // --- التهيئة ---
     init() {
-      try {
-        this.canvas = document.getElementById("analysisCanvas");
-        if (!this.canvas) {
-          console.warn("⚠️ Canvas element not found, retrying...");
-          setTimeout(() => this.init(), 1000);
-          return;
-        }
-        
-        this.ctx = this.canvas.getContext("2d");
-        console.log("✅ Canvas initialized successfully");
-
-        this.setupEventListeners();
-        this.tryAutoAttach();
-        this.ready = true;
-        
-        console.log("✅ Analysis module initialized v3.1.0");
-      } catch (error) {
-        console.error("❌ Init failed:", error);
+      if (this._initialized) {
+        return;
       }
-    },
 
-    // --- إعداد مستمعي الأحداث ---
-    setupEventListeners() {
-      try {
-        // أوضاع التحليل
-        const analysisModes = document.querySelectorAll(".analysis-modes button");
-        if (analysisModes.length > 0) {
-          analysisModes.forEach(btn => {
-            btn.addEventListener("click", () => {
-              this.mode = btn.dataset.mode;
-              this.safeUpdatePreview();
-            });
-          });
-        }
-
-        // زر التحليل الموحد
-        const runBtn = document.getElementById("runFullAnalysis");
-        if (runBtn) {
-          runBtn.addEventListener("click", () => this.runUnifiedAnalysis());
-        }
-
-        // زر التصدير
-        const expBtn = document.getElementById("exportAnalysis");
-        if (expBtn) {
-          expBtn.addEventListener("click", () => this.export());
-        }
-
-        // أزرار خريطة الألوان
-        const colormapButtons = document.querySelectorAll(".colormap-selector button");
-        if (colormapButtons.length > 0) {
-          colormapButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-              document.querySelectorAll(".colormap-selector button").forEach(b => b.classList.remove("active"));
-              btn.classList.add("active");
-              this.currentMap = btn.dataset.map;
-              this.safeUpdatePreview();
-            });
-          });
-        }
-
-        // زر التحميل اليدوي
-        const loadBtn = document.getElementById("loadAnalysisImage");
-        if (loadBtn) {
-          loadBtn.addEventListener("click", () => this.manualImageLoad());
-        }
-
-        console.log("✅ Event listeners setup completed");
-      } catch (error) {
-        console.error("❌ Event listeners setup failed:", error);
-      }
-    },
-
-    // --- تحميل الصورة يدوياً ---
-    manualImageLoad() {
-      console.log("🔄 Manual image load requested");
-      this.tryAutoAttach(true);
-    },
-
-    // --- تحديث المعاينة الآمن ---
-    safeUpdatePreview() {
-      try {
-        this.updatePreview();
-      } catch (error) {
-        console.error("❌ Safe preview update failed:", error);
-        this.handlePreviewError(error);
-      }
-    },
-
-    // --- معالجة أخطاء المعاينة ---
-    handlePreviewError(error) {
-      if (this.canvas && this.ctx) {
-        // رسم رسالة خطأ على Canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = '#f8f9fa';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.ctx.fillStyle = '#dc3545';
-        this.ctx.font = '16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('خطأ في تحميل الصورة', this.canvas.width / 2, this.canvas.height / 2);
-        this.ctx.fillText('الرجاء تحميل صورة جديدة', this.canvas.width / 2, this.canvas.height / 2 + 30);
+      console.log("🔄 Starting Analysis module initialization...");
+      
+      this.canvas = this.findCanvas();
+      if (!this.canvas) {
+        console.log("⏳ Canvas not found, delaying initialization...");
+        setTimeout(() => this.init(), 500);
+        return;
       }
       
-      this.emit(EventTypes.ERROR, { 
-        message: "خطأ في عرض المعاينة", 
-        error: error.message 
+      this.ctx = this.canvas.getContext("2d");
+      console.log("✅ Analysis canvas initialized");
+
+      this.initUI();
+      
+      this.ready = true;
+      this._initialized = true;
+      console.log("✅ Analysis module fully initialized v3.1.3");
+      
+      this.tryAutoAttach();
+      this.registerMainSystemListener();
+    },
+
+    // --- البحث عن الـ canvas بطرق متعددة ---
+    findCanvas() {
+      const selectors = [
+        "#analysisCanvas",
+        "#analysis-canvas", 
+        ".analysis-canvas",
+        "canvas[data-analysis]"
+      ];
+      
+      for (const selector of selectors) {
+        const canvas = document.querySelector(selector);
+        if (canvas && canvas.tagName === 'CANVAS') {
+          return canvas;
+        }
+      }
+      
+      return null;
+    },
+
+    // --- تهيئة واجهة المستخدم ---
+    initUI() {
+      // أوضاع التحليل
+      document.querySelectorAll(".analysis-modes button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".analysis-modes button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          this.mode = btn.dataset.mode;
+          this.updatePreview();
+        });
       });
+
+      // الأزرار
+      const runBtn = document.getElementById("runFullAnalysis");
+      if (runBtn) runBtn.addEventListener("click", () => this.runUnifiedAnalysis());
+
+      const expBtn = document.getElementById("exportAnalysis");
+      if (expBtn) expBtn.addEventListener("click", () => this.export());
+
+      const loadBtn = document.getElementById("loadAnalysisImage");
+      if (loadBtn) loadBtn.addEventListener("click", () => this.tryAutoAttach(true));
+
+      // أزرار اختيار خريطة الألوان
+      document.querySelectorAll(".colormap-selector button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".colormap-selector button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          this.currentMap = btn.dataset.map;
+          this.updatePreview();
+        });
+      });
+    },
+
+    // --- تسجيل حدث الاستماع للنظام الرئيسي ---
+    registerMainSystemListener() {
+      if (window.SmartCNC && typeof window.SmartCNC.on === 'function') {
+        window.SmartCNC.on('image_ready', mat => {
+          if (mat && mat instanceof cv.Mat) {
+            console.log("📎 SmartCNC → تحميل الصورة للتحليل");
+            this.loadImage(mat);
+          }
+        });
+      } else {
+        setTimeout(() => this.registerMainSystemListener(), 2000);
+      }
     },
 
     // --- انتظار مكتبة OpenCV ---
     waitForOpenCVAndInit() {
-      console.log("🔄 Waiting for OpenCV...");
-      
       if (typeof cv !== "undefined" && cv && cv.Mat) {
-        console.log("✅ OpenCV found, initializing...");
         this.init();
-        return;
+      } else if (cv && cv['onRuntimeInitialized']) {
+        cv['onRuntimeInitialized'] = () => this.init();
+      } else {
+        const t = setInterval(() => {
+          if (typeof cv !== "undefined" && cv && cv.Mat) {
+            clearInterval(t);
+            this.init();
+          }
+        }, 500);
       }
-
-      if (cv && cv['onRuntimeInitialized']) {
-        console.log("🔄 OpenCV runtime initializing...");
-        cv['onRuntimeInitialized'] = () => {
-          console.log("✅ OpenCV runtime ready");
-          this.init();
-        };
-        return;
-      }
-
-      // Polling method
-      let tries = 0;
-      const maxTries = 50; // 12.5 second timeout
-      
-      const checkOpenCV = setInterval(() => {
-        tries++;
-        
-        if (typeof cv !== "undefined" && cv && cv.Mat) {
-          clearInterval(checkOpenCV);
-          console.log("✅ OpenCV loaded after polling");
-          this.init();
-          return;
-        }
-        
-        if (tries >= maxTries) {
-          clearInterval(checkOpenCV);
-          console.error("❌ OpenCV loading timeout");
-          this.emit(EventTypes.ERROR, { 
-            message: "فشل تحميل مكتبة OpenCV" 
-          });
-        }
-      }, 250);
     },
 
     // --- تحميل الصورة للتحليل ---
     loadImage(mat) {
-      if (!this.ready) {
-        console.warn("⚠️ Analysis module not ready");
-        return false;
-      }
+      if (!mat || !(mat instanceof cv.Mat)) return;
       
-      if (!mat || !(mat instanceof cv.Mat)) {
-        console.error("❌ Invalid matrix provided");
-        this.emit(EventTypes.ERROR, { message: "مصفوفة غير صالحة" });
-        return false;
-      }
-
-      // التحقق من حالة المصفوفة
-      if (mat.isDeleted || mat.empty()) {
-        console.error("❌ Matrix is deleted or empty");
-        this.emit(EventTypes.ERROR, { message: "الصورة غير صالحة أو محذوفة" });
-        return false;
-      }
-
-      try {
-        // تنظيف الذاكرة القديمة
-        this.destroy();
-
-        this.srcMat = mat.clone();
-        this.grayMat = new cv.Mat();
-
-        // التحويل إلى تدرج الرمادي
-        if (this.srcMat.channels() === 1) {
-          this.srcMat.copyTo(this.grayMat);
+      // التحقق من أن الـ canvas جاهز مع حد أقصى للمحاولات
+      if (!this.canvas || !this.ctx) {
+        this._loadImageRetryCount++;
+        if (this._loadImageRetryCount <= this._maxRetryCount) {
+          setTimeout(() => this.loadImage(mat), 200);
         } else {
-          cv.cvtColor(this.srcMat, this.grayMat, cv.COLOR_RGBA2GRAY);
+          console.log("❌ Cannot load image: canvas not ready after retries");
+          this._loadImageRetryCount = 0;
         }
+        return;
+      }
 
-        // التحقق من نجاح التحويل
-        if (this.grayMat.empty()) {
-          throw new Error("Failed to convert image to grayscale");
-        }
+      // إعادة تعيين عداد المحاولات
+      this._loadImageRetryCount = 0;
 
-        // ضبط أبعاد Canvas
+      // تنظيف الذاكرة القديمة
+      if (this.srcMat && !this.srcMat.isDeleted) this.srcMat.delete();
+      if (this.grayMat && !this.grayMat.isDeleted) this.grayMat.delete();
+
+      this.srcMat = mat.clone();
+      this.grayMat = new cv.Mat();
+
+      if (this.srcMat.channels() === 1) {
+        this.srcMat.copyTo(this.grayMat);
+      } else {
+        cv.cvtColor(this.srcMat, this.grayMat, cv.COLOR_RGBA2GRAY);
+      }
+
+      if (this.grayMat && !this.grayMat.empty()) {
         this.canvas.width = this.grayMat.cols;
         this.canvas.height = this.grayMat.rows;
-        
-        console.log(`✅ Image loaded: ${this.grayMat.cols}x${this.grayMat.rows}`);
+        this.updatePreview();
+        this.updateImageStatus(true);
+      }
+    },
 
-        // تحديث المعاينة
-        this.safeUpdatePreview();
-
-        this.emit(EventTypes.IMAGE_LOADED, { 
-          width: this.grayMat.cols, 
-          height: this.grayMat.rows 
-        });
-
-        return true;
-        
-      } catch (error) {
-        console.error("❌ Image loading error:", error);
-        this.emit(EventTypes.ERROR, { 
-          message: "فشل تحميل الصورة", 
-          error: error.message 
-        });
-        this.destroy(); // تنظيف في حالة الخطأ
-        return false;
+    // --- تحديث حالة الصورة في الواجهة ---
+    updateImageStatus(loaded) {
+      const imageStatus = document.getElementById("imageStatus");
+      if (imageStatus) {
+        imageStatus.textContent = loaded ? "✅ محملة" : "غير محملة";
+        imageStatus.style.color = loaded ? "#28a745" : "#6c757d";
       }
     },
 
     // --- محاولة الربط التلقائي مع الصورة ---
     tryAutoAttach(force = false) {
       if (this.autoAttached && !force) return;
-
-      // إيقاف أي محاولة سابقة
-      if (this._autoAttachInterval) {
-        clearInterval(this._autoAttachInterval);
-      }
-
-      console.log("🔄 Starting auto-attach process...");
-
+      
       const cands = [
         () => window.currentImageMat,
         () => window.imageMat,
@@ -272,210 +186,305 @@ window.Analysis = (function () {
       ];
 
       let tries = 0;
-      this._autoAttachInterval = setInterval(() => {
+      const poll = setInterval(() => {
         tries++;
-        
-        for (let i = 0; i < cands.length; i++) {
+        for (const fn of cands) {
           try {
-            const m = cands[i]();
+            const m = fn();
             if (m && m instanceof cv.Mat && !m.isDeleted && !m.empty()) {
-              console.log(`✅ Found image matrix from source ${i}`);
-              
-              if (this.loadImage(m)) {
-                this.autoAttached = true;
-                clearInterval(this._autoAttachInterval);
-                this._autoAttachInterval = null;
-                return;
-              }
+              this.loadImage(m);
+              this.autoAttached = true;
+              clearInterval(poll);
+              return;
             }
           } catch (e) {
-            // تجاهل الأخطاء في البحث
+            // تجاهل الأخطاء بصمت
           }
         }
-
-        if (tries >= Config.MAX_AUTO_ATTACH_TRIES) {
-          clearInterval(this._autoAttachInterval);
-          this._autoAttachInterval = null;
-          console.log("ℹ️ Auto-attach timeout - no image found");
-          this.emit(EventTypes.AUTO_ATTACH_FAILED, { tries });
-          
-          // عرض رسالة للمستخدم
-          this.showUserMessage("لم يتم العثور على صورة تلقائياً. الرجاء تحميل صورة يدوياً.", "warning");
+        if (tries > 20) {
+          clearInterval(poll);
+          this.updateImageStatus(false);
         }
-      }, Config.AUTO_ATTACH_POLL_INTERVAL);
-    },
-
-    // --- عرض رسالة للمستخدم ---
-    showUserMessage(message, type = "info") {
-      const messageEl = document.getElementById("analysisMessage") || this.createMessageElement();
-      messageEl.textContent = message;
-      messageEl.className = `analysis-message ${type}`;
-      messageEl.style.display = 'block';
-
-      // إخفاء تلقائي بعد 5 ثواني
-      setTimeout(() => {
-        messageEl.style.display = 'none';
-      }, 5000);
-    },
-
-    // --- إنشاء عنصر الرسالة ---
-    createMessageElement() {
-      const messageEl = document.createElement("div");
-      messageEl.id = "analysisMessage";
-      messageEl.style.cssText = `
-        position: fixed; top: 20px; right: 20px; 
-        padding: 15px 20px; border-radius: 5px; z-index: 10000;
-        font-family: Arial, sans-serif; font-size: 14px;
-        max-width: 300px; display: none;
-      `;
-      
-      document.body.appendChild(messageEl);
-      return messageEl;
+      }, 300);
     },
 
     // --- تحديث المعاينة ---
     updatePreview() {
-      if (!this.grayMat || this.grayMat.empty() || this.grayMat.isDeleted) {
-        console.warn("⚠️ No valid image for preview");
-        this.handlePreviewError(new Error("No image available"));
+      if (!this.canvas || !this.ctx) return;
+      
+      if (!this.grayMat || this.grayMat.empty()) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         return;
       }
 
       const dst = new cv.Mat();
       try {
-        // التحقق من أبعاد الصورة
-        if (this.grayMat.cols === 0 || this.grayMat.rows === 0) {
-          throw new Error("Invalid image dimensions");
-        }
-
         switch (this.mode) {
-          case "edges":
-            cv.Canny(this.grayMat, dst, ...Config.CANNY_THRESHOLD);
-            break;
-          case "contrast":
-            cv.Laplacian(this.grayMat, dst, cv.CV_8U);
-            break;
+          case "edges": cv.Canny(this.grayMat, dst, 80, 150); break;
+          case "contrast": cv.Laplacian(this.grayMat, dst, cv.CV_8U); break;
           case "heatmap":
             cv.cvtColor(this.grayMat, dst, cv.COLOR_GRAY2RGBA);
-            const mapName = this.currentMap || Config.DEFAULT_COLORMAP;
-            const colormap = cv[`COLORMAP_${mapName}`];
-            if (colormap !== undefined) {
-              cv.applyColorMap(dst, dst, colormap);
-            } else {
+            const mapName = this.currentMap || "JET";
+            if (cv[`COLORMAP_${mapName}`])
+              cv.applyColorMap(dst, dst, cv[`COLORMAP_${mapName}`]);
+            else
               cv.applyColorMap(dst, dst, cv.COLORMAP_JET);
-            }
             break;
           case "topview":
             cv.normalize(this.grayMat, dst, 0, 255, cv.NORM_MINMAX);
             cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA);
             break;
-          default:
-            this.grayMat.copyTo(dst);
+          default: this.grayMat.copyTo(dst);
         }
-
-        // التحقق من المصفوفة الهدف قبل العرض
-        if (dst.empty() || dst.isDeleted) {
-          throw new Error("Destination matrix is invalid");
-        }
-
         cv.imshow(this.canvas, dst);
-        this.emit(EventTypes.PREVIEW_UPDATED, { mode: this.mode });
-        
-      } catch (error) {
-        console.error("❌ updatePreview error:", error);
-        throw error; // إعادة رمي الخطأ للمعالجة في safeUpdatePreview
+      } catch (e) {
+        // تجاهل أخطاء المعاينة
       } finally {
-        // تنظيف الذاكرة بشكل آمن
-        if (dst && !dst.isDeleted) {
-          dst.delete();
-        }
+        dst.delete();
       }
     },
 
-    // --- التحليل الموحد (مع معالجة أخطاء محسنة) ---
+    // --- التحليل الموحد (كامل + ذكي) ---
     runUnifiedAnalysis() {
-      if (this.currentAnalysis) {
-        this.showUserMessage("جاري تحليل سابق بالفعل...", "warning");
+      if (!this.grayMat || this.grayMat.empty()) {
+        this.showMessage("لا توجد صورة للتحليل", "error");
         return;
       }
 
-      if (!this.grayMat || this.grayMat.empty() || this.grayMat.isDeleted) {
-        this.showUserMessage("لا توجد صورة صالحة للتحليل", "error");
-        this.emit(EventTypes.ERROR, { message: "لا توجد صورة للتحليل" });
-        return;
-      }
-
-      this.currentAnalysis = true;
-      this.showLoading("جاري التحليل...");
-      this.emit(EventTypes.ANALYSIS_START);
-
-      const mats = []; // لتتبع المصفوفات المؤقتة
+      this.showLoading(true);
+      const mats = [];
 
       try {
-        // ... (بقية كود التحليل بدون تغيير)
-        // [الكود السابق يبقى كما هو مع إضافة try-catch]
+        const edges = new cv.Mat(); mats.push(edges);
+        cv.Canny(this.grayMat, edges, 80, 150);
+        const edgeCount = cv.countNonZero(edges);
+
+        const mean = new cv.Mat(); mats.push(mean);
+        const stddev = new cv.Mat(); mats.push(stddev);
+        cv.meanStdDev(this.grayMat, mean, stddev);
+        const contrastVal = Math.round(stddev.data64F ? stddev.data64F[0] : stddev.data[0]);
+
+        const texture = new cv.Mat(); mats.push(texture);
+        cv.Laplacian(this.grayMat, texture, cv.CV_8U);
+        const textureVal = Math.min(100, Math.round((cv.countNonZero(texture) / (this.grayMat.rows * this.grayMat.cols)) * 400));
+
+        let gradX = new cv.Mat(); mats.push(gradX);
+        let gradY = new cv.Mat(); mats.push(gradY);
+        cv.Sobel(this.grayMat, gradX, cv.CV_32F, 1, 0);
+        cv.Sobel(this.grayMat, gradY, cv.CV_32F, 0, 1);
+        const meanGradX = cv.mean(gradX)[0];
+        const meanGradY = cv.mean(gradY)[0];
+        const orientationAngle = Math.abs(meanGradX) > Math.abs(meanGradY) ? "أفقي (X)" : "رأسي (Y)";
+
+        const sharpness = this.calculateSharpness();
+
+        const colorReady = new cv.Mat(); mats.push(colorReady);
+        cv.addWeighted(edges, 0.5, texture, 0.5, 0, colorReady);
+        const mapName = this.currentMap || "JET";
+        try {
+          cv.applyColorMap(colorReady, colorReady, cv[`COLORMAP_${mapName}`] || cv.COLORMAP_JET);
+        } catch {
+          cv.cvtColor(colorReady, colorReady, cv.COLOR_GRAY2RGBA);
+        }
+        cv.imshow(this.canvas, colorReady);
+
+        const totalPixels = this.grayMat.rows * this.grayMat.cols;
+        const detailDensity = Math.min(100, Math.round((edgeCount / totalPixels) * 100));
         
-      } catch (error) {
-        console.error("❌ Analysis error:", error);
-        this.showUserMessage("فشل في التحليل: " + error.message, "error");
-        this.emit(EventTypes.ERROR, { 
-          message: "خطأ في التحليل", 
-          error: error.message 
-        });
+        const recommendation = this.generateRecommendation(detailDensity, contrastVal, sharpness);
+
+        const put = (id, val) => { 
+          const el = document.getElementById(id); 
+          if (el) el.textContent = val; 
+        };
+        
+        put("edgeCount", edgeCount.toLocaleString('ar-EG'));
+        put("contrastValue", contrastVal + "%");
+        put("detailDensity", detailDensity + "%");
+        put("textureValue", textureVal + "%");
+        put("orientationValue", orientationAngle);
+        put("sharpnessValue", sharpness);
+        put("analysisRecommendation", recommendation);
+
+        this.showMessage("تم التحليل بنجاح", "success");
+
+      } catch (e) {
+        console.error("Analysis error:", e);
+        this.showMessage("حدث خطأ أثناء التحليل", "error");
       } finally {
-        // تنظيف الذاكرة بشكل آمن
         mats.forEach(mat => {
-          try {
-            if (mat && !mat.isDeleted) {
-              mat.delete();
-            }
-          } catch (e) {
-            console.warn("⚠️ Error deleting matrix:", e);
-          }
+          if (mat && !mat.isDeleted) mat.delete();
         });
-        
-        this.hideLoading();
-        this.currentAnalysis = false;
+        this.showLoading(false);
       }
     },
 
-    // --- تنظيف الذاكرة المحسنة ---
-    destroy() {
-      try {
-        if (this.srcMat && !this.srcMat.isDeleted) { 
-          this.srcMat.delete(); 
-        }
-        if (this.grayMat && !this.grayMat.isDeleted) { 
-          this.grayMat.delete(); 
-        }
-        
-        // إيقاف عملية الربط التلقائي
-        if (this._autoAttachInterval) {
-          clearInterval(this._autoAttachInterval);
-          this._autoAttachInterval = null;
-        }
-      } catch (error) {
-        console.warn("⚠️ Error during cleanup:", error);
-      } finally {
-        this.srcMat = null;
-        this.grayMat = null;
-        this.ready = false;
-        this.autoAttached = false;
-        this.currentAnalysis = null;
-      }
+    // --- حساب حدة الصورة ---
+    calculateSharpness() {
+      if (!this.grayMat || this.grayMat.empty()) return 0;
       
-      console.log("🧹 Analysis module cleaned up");
+      const laplacian = new cv.Mat();
+      try {
+        cv.Laplacian(this.grayMat, laplacian, cv.CV_64F);
+        const mean = cv.mean(laplacian);
+        const sharpness = Math.round(Math.abs(mean[0]) * 100) / 100;
+        return sharpness;
+      } catch (e) {
+        return 0;
+      } finally {
+        if (laplacian && !laplacian.isDeleted) laplacian.delete();
+      }
     },
 
-    // ... (بقية الدوال تبقى كما هي)
-    // [الحفاظ على الدوال الأخرى من الإصدار السابق]
+    // --- توليد التوصية الذكية ---
+    generateRecommendation(detailDensity, contrastVal, sharpness) {
+      if (detailDensity > 70 && contrastVal > 50 && sharpness > 30) {
+        return "Router CNC عالي الدقة (مثالي للنقش التفصيلي)";
+      } else if (detailDensity > 40 && contrastVal > 30) {
+        return "ليزر عالي الدقة (مناسب للنقش الناعم)";
+      } else if (detailDensity > 20) {
+        return "ليزر عادي (للرسومات البسيطة)";
+      } else if (sharpness < 10) {
+        return "تحسين الإضاءة والتركيز أولاً";
+      } else {
+        return "غير مناسب للنقش التفصيلي - جرب تحويل إلى Vector";
+      }
+    },
+
+    // --- إظهار رسائل للمستخدم ---
+    showMessage(message, type = "info") {
+      const messageEl = document.getElementById("analysisMessage");
+      if (!messageEl) return;
+
+      messageEl.textContent = message;
+      messageEl.className = `analysis-message ${type}`;
+      messageEl.style.display = 'block';
+
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 4000);
+    },
+
+    // --- إظهار/إخفاء شاشة التحميل ---
+    showLoading(show) {
+      const loadingEl = document.getElementById("analysisLoading");
+      if (!loadingEl) return;
+
+      if (show) {
+        loadingEl.style.display = 'block';
+      } else {
+        loadingEl.style.display = 'none';
+      }
+    },
+
+    // --- تصدير النتائج ---
+    export(type = 'json') {
+      const results = {
+        edges: document.getElementById("edgeCount")?.textContent || null,
+        contrast: document.getElementById("contrastValue")?.textContent || null,
+        density: document.getElementById("detailDensity")?.textContent || null,
+        texture: document.getElementById("textureValue")?.textContent || null,
+        orientation: document.getElementById("orientationValue")?.textContent || null,
+        sharpness: document.getElementById("sharpnessValue")?.textContent || null,
+        recommendation: document.getElementById("analysisRecommendation")?.textContent || null,
+        timestamp: new Date().toLocaleString('ar-EG')
+      };
+
+      switch (type) {
+        case 'json':
+          const blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+          this.downloadFile(blob, "analysis-results.json");
+          break;
+        case 'csv':
+          const csvContent = Object.entries(results)
+            .map(([key, value]) => `"${key}","${value}"`)
+            .join('\n');
+          const csvBlob = new Blob(["\uFEFF" + csvContent], { type: "text/csv; charset=utf-8;" });
+          this.downloadFile(csvBlob, "analysis-results.csv");
+          break;
+        case 'image':
+          this.exportImage();
+          break;
+        case 'report':
+          this.exportHTMLReport(results);
+          break;
+      }
+    },
+
+    // --- تصدير الصورة ---
+    exportImage() {
+      const link = document.createElement('a');
+      link.download = 'analysis-preview.png';
+      link.href = this.canvas.toDataURL();
+      link.click();
+    },
+
+    // --- تصدير تقرير HTML ---
+    exportHTMLReport(results) {
+      const htmlContent = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير التحليل - ${results.timestamp}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .report { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        .result-item { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .recommendation { background: #fff3cd; border: 2px solid #ffc107; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="report">
+        <h1>تقرير تحليل الصورة</h1>
+        <div class="result-item">عدد الحواف: ${results.edges}</div>
+        <div class="result-item">نسبة التباين: ${results.contrast}</div>
+        <div class="result-item">كثافة التفاصيل: ${results.density}</div>
+        <div class="result-item">قيمة الملمس: ${results.texture}</div>
+        <div class="result-item">الاتجاه السائد: ${results.orientation}</div>
+        <div class="result-item">حدة الصورة: ${results.sharpness}</div>
+        <div class="result-item recommendation">التوصية: ${results.recommendation}</div>
+    </div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      this.downloadFile(blob, 'تقرير-التحليل.html');
+    },
+
+    // --- تحميل الملف ---
+    downloadFile(blob, filename) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    },
+
+    // --- تنظيف الذاكرة ---
+    destroy() {
+      if (this.srcMat && !this.srcMat.isDeleted) this.srcMat.delete();
+      if (this.grayMat && !this.grayMat.isDeleted) this.grayMat.delete();
+      this.srcMat = null;
+      this.grayMat = null;
+      this.ready = false;
+      this._initialized = false;
+      this._loadImageRetryCount = 0;
+    }
   };
 
-  // --- تشغيل الوحدة ---
-  setTimeout(() => {
-    console.log("🚀 Starting Analysis Module...");
-    Module.waitForOpenCVAndInit();
-  }, 100);
-
+  setTimeout(() => Module.waitForOpenCVAndInit(), 100);
   return Module;
 })();
+
+// التكامل مع النظام الرئيسي - بدون رسائل مزعجة
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    if (window.Analysis && typeof window.Analysis.waitForOpenCVAndInit === 'function') {
+      window.Analysis.waitForOpenCVAndInit();
+    }
+  }, 1500);
+});
