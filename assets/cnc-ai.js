@@ -255,27 +255,65 @@ window.Analysis = (function () {
             }
             break;
             
-          case "contrast": cv.Laplacian(this.grayMat, dst, cv.CV_8U); break;
-          case "heatmap":
-            cv.cvtColor(this.grayMat, dst, cv.COLOR_GRAY2RGBA);
-            const mapName = this.currentMap || "JET";
-            if (cv[`COLORMAP_${mapName}`])
-              cv.applyColorMap(dst, dst, cv[`COLORMAP_${mapName}`]);
-            else
-              cv.applyColorMap(dst, dst, cv.COLORMAP_JET);
+          case "contrast": 
+            cv.Laplacian(this.grayMat, dst, cv.CV_8U); 
             break;
+            
+          case "heatmap":
+            // إصلاح مشكلة خرائط الألوان
+            const heatmapMat = new cv.Mat();
+            cv.cvtColor(this.grayMat, heatmapMat, cv.COLOR_GRAY2BGR);
+            
+            // تحويل خريطة الألوان المطلوبة إلى القيمة الصحيحة المناسبة
+            const colormapValue = this.getColormapValue(this.currentMap);
+            cv.applyColorMap(heatmapMat, dst, colormapValue);
+            
+            heatmapMat.delete();
+            break;
+            
           case "topview":
             cv.normalize(this.grayMat, dst, 0, 255, cv.NORM_MINMAX);
             cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA);
             break;
-          default: this.grayMat.copyTo(dst);
+            
+          default: 
+            this.grayMat.copyTo(dst);
         }
         cv.imshow(this.canvas, dst);
       } catch (e) {
-        // تجاهل أخطاء المعاينة
+        console.error("Preview error:", e);
       } finally {
         dst.delete();
       }
+    },
+
+    // --- الحصول على قيمة خريطة الألوان الصحيحة ---
+    getColormapValue(mapName) {
+      const colormapMap = {
+        "AUTUMN": cv.COLORMAP_AUTUMN,
+        "BONE": cv.COLORMAP_BONE,
+        "JET": cv.COLORMAP_JET,
+        "WINTER": cv.COLORMAP_WINTER,
+        "RAINBOW": cv.COLORMAP_RAINBOW,
+        "OCEAN": cv.COLORMAP_OCEAN,
+        "SUMMER": cv.COLORMAP_SUMMER,
+        "SPRING": cv.COLORMAP_SPRING,
+        "COOL": cv.COLORMAP_COOL,
+        "HSV": cv.COLORMAP_HSV,
+        "PINK": cv.COLORMAP_PINK,
+        "HOT": cv.COLORMAP_HOT,
+        "PARULA": cv.COLORMAP_PARULA,
+        "MAGMA": cv.COLORMAP_MAGMA,
+        "INFERNO": cv.COLORMAP_INFERNO,
+        "PLASMA": cv.COLORMAP_PLASMA,
+        "VIRIDIS": cv.COLORMAP_VIRIDIS,
+        "CIVIDIS": cv.COLORMAP_CIVIDIS,
+        "TWILIGHT": cv.COLORMAP_TWILIGHT,
+        "TWILIGHT_SHIFTED": cv.COLORMAP_TWILIGHT_SHIFTED,
+        "TURBO": cv.COLORMAP_TURBO
+      };
+      
+      return colormapMap[mapName] || cv.COLORMAP_JET;
     },
 
     // --- التحليل الموحد (كامل + ذكي) ---
