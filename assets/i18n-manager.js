@@ -31,7 +31,7 @@ class I18nManager {
                 ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1)
                 : './';
             
-            const response = await fetch(`${basePath}locales/${this.currentLang}.json`);
+            const response = await fetch(`${basePath}assets/locales/${this.currentLang}.json`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -67,7 +67,7 @@ class I18nManager {
             'edgeSensitivity': 'حساسية الحواف:',
             'original': 'الأصلية',
             'heatmap': 'Heatmap',
-            'contours': 'Contours',
+            'contours': 'الحواف',
             'topView': 'Top View',
             '3dModels': '3D Models',
             'simulation': 'المحاكاة',
