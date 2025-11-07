@@ -1,0 +1,125 @@
+{
+    "appTitle": "CNC AI — CNC Router & Laser Engraving & 3D Printing",
+    "version": "CncAi — النسخة المستقرة 2.6.0",
+    "loadingOpencv": "جاري تحميل OpenCV...",
+    "selectImage": "📁 اختر صورة",
+    "edgeMode": "نمط الحواف:",
+    "cannyNormal": "Canny (عادي)",
+    "sobelPrecise": "Sobel (دقيق)",
+    "laplacianSmooth": "Laplacian (ناعم)",
+    "stlSvgDxf": "تحميل ملفات STL و SVG و DXF",
+    "stlDesc": "نموذج ثلاثي الأبعاد",
+    "svgDesc": "رسوم متجهة",
+    "dxfDesc": "رسم CAD",
+    "fileFormatsDesc": "يمكن تحميل ملفات STL للطباعة ثلاثية الأبعاد، وملفات SVG/DXF للتحويل إلى G-code",
+    "colormapOptions": "خيارات تدرج الألوان",
+    "colormapDesc": "التغيير يطبق على: Heatmap • Top View • Contours • كل المعاينات",
+    "edgeSensitivity": "حساسية الحواف:",
+    "original": "الأصلية",
+    "heatmap": "الخريطة الحرارية",
+    "contours": "الحواف",
+    "topView": "معاينة علوية",
+    "3dModels": "3D عرض ",
+    "simulation": "المحاكاة",
+    "analysis": "التحليل",
+    "originalPlaceholder": "الصورة الأصلية ستظهر هنا",
+    "heatmapPlaceholder": "Heatmap ستظهر هنا",
+    "contourPlaceholder": "Contours ستظهر هنا",
+    "contourDesc": "تبديل وضع كشف الحواف أو تحريك حساسية الحواف يحدث إعادة معالجة تلقائية",
+    "topViewDesc": "معاينة من الأعلى للعمق المتوقع بعد تنفيذ G-code (الألوان تتبع اختيار Colormap)",
+    "threedPlaceholder": "الموديل ثلاثي الأبعاد سيظهر هنا",
+    "simulationPlaceholder": "المحاكاة ستظهر هنا بعد توليد G-code",
+    "edges": "الحواف",
+    "contrast": "التباين",
+    "density": "الكثافة",
+    "height": "الارتفاع",
+    "loadImageManually": "تحميل صورة يدوياً",
+    "analysisResults": "نتائج التحليل",
+    "edgeCount": "عدد الحواف:",
+    "contrastRatio": "نسبة التباين:",
+    "detailDensity": "كثافة التفاصيل:",
+    "textureValue": "قيمة الملمس:",
+    "dominantOrientation": "الاتجاه السائد:",
+    "imageSharpness": "حدة الصورة:",
+    "recommendation": "التوصية:",
+    "fullAnalysis": "تحليل كامل",
+    "exportResults": "تصدير النتائج",
+    "image": "صورة",
+    "report": "تقرير",
+    "processing": "جاري المعالجة...",
+    "machineSettings": "إعدادات الماكينة",
+    "advancedMachineSettings": "⚙️ الإعدادات المتقدمة للماكينة",
+    "originX": "النقطة X",
+    "originY": "النقطة Y",
+    "originZ": "النقطة Z",
+    "calibX": "معايرة X",
+    "calibY": "معايرة Y",
+    "reverseX": "عكس X",
+    "reverseY": "عكس Y",
+    "execution": "التنفيذ",
+    "delayMs": "التأخير (مللي ثانية)",
+    "resetDefaults": "إرجاع الإعدادات الافتراضية",
+    "save": "حفظ",
+    "machineType": "نوع الماكينة الرئيسي",
+    "cncRouter": "CNC Router (نحت خشب)",
+    "laserEngraver": "Laser Engraver (نقش ليزر)",
+    "3dPrinter": "3D Printer (طباعة ثلاثية الأبعاد)",
+    "cncRouterSettings": "إعدادات CNC Router",
+    "workWidth": "عرض العمل (سم)",
+    "workHeight": "ارتفاع العمل (سم)",
+    "workDepth": "عمق العمل (مم)",
+    "centerOrigin": "🎯 توسيط نقطة الأصل",
+    "feedRate": "سرعة التغذية (مم/دقيقة)",
+    "safeZ": "ارتفاع الأمان (مم)",
+    "scanDirection": "اتجاه المسارات (Raster)",
+    "horizontal": "أفقي (X)",
+    "vertical": "رأسي (Y)",
+    "stepOver": "خطوة المسح (مم)",
+    "maxDepth": "أقصى عمق (مم)",
+    "useFixedZ": "استخدام Z ثابت",
+    "invertZ": "عكس Z",
+    "woodColor": "لون الخشب:",
+    "lightWood": "خشب فاتح",
+    "mediumWood": "خشب متوسط",
+    "beige": "بيج",
+    "mahogany": "ماهوجني",
+    "generateCombo": "🧠 توليد Combo (Contour + Raster)",
+    "generateGcode": "⚡ توليد G-code (Raster)",
+    "quickTest": "🧪 اختبار سريع",
+    "edgeRange": "نطاق الحواف (Contour)",
+    "outerOnly": "الخارجية فقط",
+    "allEdges": "كل الحواف",
+    "generateGcodeContour": "🌀 توليد G-code (Contour)",
+    "downloadGcode": "💾 تحميل G-code",
+    "laserEngraverSettings": "إعدادات Laser Engraver",
+    "laserEdgeMode": "نمط كشف الحواف للليزر",
+    "adaptiveDesc": "Adaptive Threshold - ممتاز للصور ذات الإضاءة غير المتجانسة",
+    "laserDetail": "دقة الليزر:",
+    "redetectEdges": "🔄 إعادة كشف حواف الليزر",
+    "laserPower": "قوة الليزر:",
+    "laserMode": "وضع الليزر",
+    "engrave": "نقش (Grayscale)",
+    "cut": "قص (Contour)",
+    "combine": "نقش + قص",
+    "laserSpeed": "سرعة الليزر (مم/دقيقة)",
+    "laserPasses": "عدد المرات",
+    "dynamicPower": "قوة ديناميكية (حسب الظلام)",
+    "airAssist": "Air Assist",
+    "generateLaserCode": "⚡ توليد كود ليزر (نقش)",
+    "quickEngrave": "🧪 نقش سريع",
+    "generateLaserCut": "✂️ توليد كود ليزر (قص)",
+    "downloadLaserCode": "💾 تحميل كود الليزر",
+    "threedSettings": "إعدادات النماذج ثلاثية الأبعاد",
+    "load3dFile": "تحميل ملف 3D (STL, OBJ, etc.)",
+    "layerHeight": "ارتفاع الطبقة (مم)",
+    "fillDensity": "كثافة الحشو (%)",
+    "printSpeed": "سرعة الطباعة (مم/ث)",
+    "infillPattern": "نمط الحشو",
+    "support": "دعم (Support)",
+    "raft": "رافدة (Raft)",
+    "generate3dGcode": "⚡ توليد G-code (3D)",
+    "previewLayers": "👁️ معاينة الطبقات",
+    "download3dGcode": "💾 تحميل G-code 3D",
+    "gcodeOutput": "مخرجات G-code",
+    "lang": "AR"
+}
