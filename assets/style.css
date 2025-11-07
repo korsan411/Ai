@@ -1,0 +1,890 @@
+
+/* CncAi — style.css | أنماط واجهة المستخدم */
+
+/* نظام الثيمات */
+:root {
+  --bg-primary: #041022;
+  --bg-secondary: #0a1a35;
+  --bg-panel: rgba(11, 19, 32, 0.8);
+  --bg-element: rgba(15, 23, 42, 0.7);
+  --text-primary: #e6eef6;
+  --text-secondary: #9bb0c8;
+  --text-muted: #9bb0c8;
+  --border-color: rgba(30, 41, 59, 0.5);
+  --accent-color: #06b6d4;
+  --accent-gradient: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --laser-color: #ff4444;
+  --threed-color: #10b981;
+  --shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 6px 16px rgba(6, 182, 212, 0.4);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #e2e8f0;
+  --bg-panel: rgba(248, 250, 252, 0.9);
+  --bg-element: rgba(255, 255, 255, 0.8);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: rgba(203, 213, 225, 0.6);
+  --accent-color: #06b6d4;
+  --accent-gradient: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --laser-color: #dc2626;
+  --threed-color: #059669;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+/* تطبيق المتغيرات على العناصر */
+* { box-sizing: border-box; }
+
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary); 
+    line-height: 1.5;
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+.app { 
+    max-width: 1400px; 
+    margin: 16px auto; 
+    padding: 16px;
+}
+
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px; 
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-panel);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.grid { 
+    display: grid; 
+    grid-template-columns: 1fr 520px; 
+    gap: 20px;
+}
+
+@media (max-width: 1100px){ 
+    .grid{ 
+        grid-template-columns: 1fr;
+    } 
+}
+
+.panel { 
+    background: var(--bg-panel); 
+    padding: 20px; 
+    border-radius: 12px; 
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+}
+
+
+/* شريط الإعدادات */
+.settings-bar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+}
+
+.theme-btn, .lang-btn {
+    background: var(--bg-element);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.theme-btn:hover, .lang-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+}
+
+.theme-icon, .lang-text {
+    font-size: 16px;
+}
+
+/* تحسين التبويبات */
+.tab-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  background: var(--bg-element);
+  padding: 10px;
+  border-radius: 12px;
+}
+@media (min-width: 900px) {
+  .tab-buttons { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 899px) {
+  .tab-buttons { grid-template-columns: repeat(2, 1fr); }
+}
+
+.tab-buttons button { 
+    flex: 1; 
+    border: none; 
+    padding: 10px 12px; 
+    border-radius: 8px; 
+    background: transparent; 
+    color: var(--text-secondary); 
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.tab-buttons button:hover { 
+    background: var(--border-color);
+    transform: translateY(-1px);
+}
+
+.tab-buttons button.active { 
+    background: var(--accent-gradient); 
+    color: #fff; 
+    box-shadow: var(--shadow-glow);
+}
+
+.tab-content { 
+    display: none; 
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-content.active { 
+    display: block; 
+}
+
+canvas { 
+    max-width: 100%; 
+    border-radius: 8px; 
+    background: #000; 
+    display: block; 
+    margin: 0 auto; 
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+#threeContainer, #threeDContainer { 
+    width: 100%; 
+    height: 420px; 
+    background: var(--bg-element); 
+    border-radius: 10px; 
+    overflow: hidden; 
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+label { 
+    display: block; 
+    margin-top: 16px; 
+    color: var(--text-primary); 
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+input, select, textarea, button { 
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+input, select { 
+    width: 100%; 
+    padding: 10px 12px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-color); 
+    background: var(--bg-element); 
+    color: var(--text-primary); 
+    margin-top: 6px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+}
+
+.button-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    margin-top: 16px; 
+}
+
+.button-row { 
+    display: flex; 
+    gap: 10px; 
+}
+
+button { 
+    background: var(--bg-element); 
+    color: var(--text-primary); 
+    border: none; 
+    padding: 12px 16px; 
+    border-radius: 8px; 
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+button.primary { 
+    background: var(--accent-gradient); 
+    color: #fff; 
+    font-weight: 600;
+}
+
+button.primary:hover {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    box-shadow: var(--shadow-glow);
+}
+
+button.secondary { 
+    background: var(--border-color); 
+}
+
+button.secondary:hover {
+    background: rgba(71, 85, 105, 0.8);
+}
+
+#toast { 
+    position: fixed; 
+    right: 20px; 
+    bottom: 20px; 
+    background: rgba(0, 0, 0, 0.9); 
+    color: #fff; 
+    padding: 12px 16px; 
+    border-radius: 10px; 
+    display: none; 
+    z-index: 10000;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--accent-color);
+}
+
+.canvas-placeholder { 
+    width: 100%; 
+    min-height:220px; 
+    background: var(--bg-element); 
+    border-radius: 8px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--text-muted); 
+    border: 1px dashed var(--border-color);
+}
+
+.small-meta { 
+    font-size: 0.85rem; 
+    color: var(--text-muted); 
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* تحسين قسم أزرار الـ Colormap */
+.colormap-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-element);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.colormap-title {
+    text-align: center;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.colormap-buttons { 
+    display: flex; 
+    gap: 10px; 
+    justify-content: center; 
+    margin-top: 12px; 
+    flex-wrap: wrap; 
+}
+
+.colormap-buttons button {
+    background: var(--bg-element); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    padding: 12px 18px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    transition: all 0.3s ease; 
+    min-width: 90px;
+}
+
+.colormap-buttons button:hover { 
+    background: var(--border-color); 
+    border-color: var(--accent-color); 
+    transform: translateY(-3px); 
+    box-shadow: var(--shadow);
+}
+
+.colormap-buttons button.active { 
+    background: var(--accent-gradient); 
+    color: #fff; 
+    border-color: var(--accent-color); 
+    box-shadow: var(--shadow-glow);
+}
+
+/* تحسين إعدادات الماكينة */
+.machine-settings { 
+    transition: all 0.3s ease; 
+}
+
+.laser-specific { 
+    border-right: 3px solid var(--laser-color); 
+    padding-right: 12px; 
+    margin: 12px 0; 
+    background: rgba(255, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.router-specific { 
+    border-right: 3px solid var(--accent-color); 
+    padding-right: 12px; 
+    margin: 12px 0; 
+    background: rgba(6, 182, 212, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.threed-specific { 
+    border-right: 3px solid var(--threed-color); 
+    padding-right: 12px; 
+    margin: 12px 0; 
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.laser-edge-settings {
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+    background: rgba(255, 68, 68, 0.05);
+}
+
+.laser-mode-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* تحسين شريط التمرير */
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--shadow);
+}
+
+/* تحسين منطقة النص */
+textarea {
+    height: 180px;
+    background: var(--bg-element);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+}
+
+/* تحسين الوقت المقدر */
+#estTime {
+    margin-top: 16px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 12px;
+    background: var(--bg-element);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+/* تحسين الـ Top View */
+#topViewContainer { 
+    margin-top: 16px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    align-items: center; 
+}
+
+#topView { 
+    width: 100%; 
+    height: 200px; 
+    background: var(--bg-element); 
+    border-radius: 8px; 
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+#topLegend { 
+    width: 100%; 
+    height: 20px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-color); 
+    background: linear-gradient(90deg, #ddd, #333);
+}
+
+/* تحسين حالة OpenCV */
+#cvState {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    background: var(--bg-element);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.loading {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(243, 243, 243, 0.3);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+/* تحسين اختيار الملف */
+.file-input-label {
+    display: inline-block;
+    padding: 10px 14px;
+    background: var(--bg-element);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    border: 1px dashed var(--border-color);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.file-input-label:hover {
+    background: var(--border-color);
+    border-color: var(--accent-color);
+}
+
+/* تحسين خطوط الفصل */
+hr {
+    border: none;
+    height: 1px;
+    background: var(--border-color);
+    margin: 16px 0;
+}
+
+/* تحسين العناوين */
+h3 {
+    margin-top: 0;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    font-size: 1.3rem;
+}
+
+h4 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* تحسين مربعات الاختيار */
+input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+/* تحسين الشبكة الداخلية */
+.inner-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* تحسين التقدم */
+.progress-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 30000;
+    flex-direction: column;
+    gap: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.progress-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(243, 243, 243, 0.2);
+    border-top: 5px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.progress-text {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* Debug overlay */
+#debugOverlay {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    width: 420px;
+    max-height: 55vh;
+    background: var(--bg-element);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 20000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+#debugOverlay.minimized { height: 36px; width: 160px; cursor: pointer; }
+#debugHeader {
+    display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-bottom:1px solid var(--border-color);
+    background: var(--bg-element);
+}
+#debugHeader b { color:var(--accent-color); }
+#debugControls { display:flex; gap:6px; align-items:center; }
+.dbg-btn { background:transparent; border:1px solid var(--border-color); color:var(--text-primary); padding:6px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
+#debugList { overflow:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
+.dbg-item { padding:8px; border-radius:6px; background:var(--bg-element); line-height:1.2; max-height:120px; overflow:auto; font-family:monospace; font-size:12px; }
+.dbg-time { opacity:0.7; font-size:11px; margin-bottom:6px; display:block; }
+.dbg-error { border-left:4px solid var(--error-color); }
+.dbg-warn { border-left:4px solid var(--warning-color); }
+.dbg-info { border-left:4px solid var(--accent-color); color:var(--text-primary); }
+.dbg-meta { opacity:0.75; font-size:11px; margin-top:6px; color:var(--text-muted); }
+#debugFooter { padding:6px 10px; border-top:1px solid var(--border-color); text-align:right; font-size:12px; color:var(--text-muted); background:var(--bg-element); display:flex; justify-content:space-between; align-items:center; }
+
+/* Simulation controls */
+.sim-controls { position:absolute; top:10px; right:10px; z-index:120; display:flex; gap:8px; align-items:center; background:var(--bg-element); padding:6px;border-radius:6px }
+.sim-controls button { background:var(--bg-element); color:var(--text-primary); border:1px solid var(--accent-color); border-radius:4px; padding:6px 8px; cursor:pointer; font-size:0.9rem }
+.sim-progress { position:absolute; bottom:10px; right:10px; z-index:120; background:var(--bg-element); padding:6px 8px;border-radius:6px; color:var(--text-primary); font-size:12px }
+
+/* قسم ملفات STL و SVG و DXF */
+.file-format-section {
+    margin: 20px 0;
+    padding: 16px;
+    background: var(--bg-element);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.file-format-title {
+    text-align: center;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.file-format-buttons { 
+    display: flex; 
+    gap: 10px; 
+    justify-content: center; 
+    margin-top: 12px; 
+    flex-wrap: wrap; 
+}
+
+.file-format-buttons button {
+    background: var(--bg-element); 
+    color: var(--text-primary); 
+    border: 1px solid var(--border-color); 
+    padding: 12px 18px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    transition: all 0.3s ease; 
+    min-width: 90px;
+}
+
+.file-format-buttons button:hover { 
+    background: var(--border-color); 
+    border-color: var(--accent-color); 
+    transform: translateY(-3px); 
+    box-shadow: var(--shadow);
+}
+
+.file-format-buttons button.active { 
+    background: var(--accent-gradient); 
+    color: #fff; 
+    border-color: var(--accent-color); 
+    box-shadow: var(--shadow-glow);
+}
+
+.combo-row {
+  margin-top: 12px;
+  text-align: center;
+}
+.highlight-combo {
+  background: linear-gradient(90deg, #ff6b6b, #feca57);
+  color: #fff;
+  font-weight: bold;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+  transition: 0.3s;
+}
+.highlight-combo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 200, 0, 0.7);
+}
+/* dbgCloseLegacy styling */
+#dbgCloseLegacy { background: var(--bg-element); color:var(--text-primary); border:1px solid var(--border-color); padding:6px 8px; border-radius:8px; cursor:pointer; font-size:13px; }
+#dbgCloseLegacy:hover { background: var(--error-color); }
+
+#debugOverlay {
+  width: 90vw;
+  max-width: 420px;
+  left: 5vw;
+  bottom: 12px;
+  font-size: 14px;
+  z-index: 99999;
+}
+#debugControls {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.dbg-btn {
+  min-width: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+}
+@media (max-width: 600px) {
+  #debugOverlay {
+    width: 96vw;
+    left: 2vw;
+    bottom: 8px;
+    font-size: 13px;
+  }
+  .dbg-btn {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+}
+
+.dbg-btn {
+  background: rgba(6,182,212,0.1);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.25s ease;
+  box-shadow: var(--shadow);
+}
+
+.dbg-btn:hover {
+  background: rgba(6,182,212,0.25);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.dbg-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 6px rgba(6,182,212,0.6);
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 5px rgba(6,182,212,0.5); }
+  50% { box-shadow: 0 0 15px rgba(6,182,212,0.9); }
+  100% { box-shadow: 0 0 5px rgba(6,182,212,0.5); }
+}
+
+.dbg-btn.active-glow {
+  animation: glowPulse 0.4s ease;
+}
+
+#debugControls {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+#debugTopbar { }
+#debugList { max-height: 40vh; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:6px; }
+
+/* CNC_AI_TABS_RESPONSIVE_2_5_0 */
+.tab-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:center;padding:8px;border-radius:10px}
+.tab-buttons .more-dropdown{position:relative}
+.more-list{position:absolute;right:0;top:40px;background:var(--bg-element);border:1px solid var(--border-color);padding:6px;border-radius:8px;display:none;z-index:20000;min-width:140px}
+.more-list button{display:block;width:100%;text-align:right;padding:6px;background:transparent;border:0;color:var(--text-primary)}
+
+#adv-machine-card{background:var(--bg-element);padding:12px;border-radius:10px;margin-top:10px;border:1px solid var(--border-color);max-width:720px}
+#adv-machine-toggle{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+#adv-machine-body{margin-top:10px;display:none;gap:8px;flex-direction:column}
+.adv-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.adv-row label{min-width:88px;color:var(--text-primary)}
+.adv-input{width:120px;padding:6px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-primary)}
+.adv-slider{width:180px}
+.adv-actions{margin-top:8px;display:flex;gap:8px}
+
+/* Minimal clean debug styles */
+#cnc-debug-overlay{position:fixed;left:12px;top:12px;width:min(420px,94vw);max-height:60vh;display:flex;flex-direction:column;background:var(--bg-element);color:var(--text-primary);border-radius:10px;box-shadow:var(--shadow);z-index:24000;font-size:13px;overflow:hidden;transition:transform .18s ease,opacity .18s ease}
+#cnc-debug-overlay.collapsed{height:44px;overflow:visible}
+#cnc-debug-header{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border-color)}
+#cnc-debug-title{font-weight:700;color:var(--text-primary);margin-right:8px}
+#cnc-debug-body{padding:8px;overflow:auto;max-height:calc(60vh - 48px);font-family:monospace;font-size:12px}
+#cnc-debug-controls button{background:transparent;border:0;color:var(--text-primary);cursor:pointer;padding:6px 8px;border-radius:6px}
+#cnc-debug-btn{position:fixed;left:12px;bottom:12px;z-index:25000;width:44px;height:44px;border-radius:50%;background:var(--accent-color);color:#fff;border:none;box-shadow:var(--shadow);font-size:18px;cursor:pointer}
+
+/* تحسينات إضافية للثيم الفاتح */
+[data-theme="light"] .panel,
+[data-theme="light"] .colormap-section,
+[data-theme="light"] .file-format-section,
+[data-theme="light"] .tab-buttons {
+    backdrop-filter: none;
+}
+
+[data-theme="light"] canvas {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .canvas-placeholder {
+    background: var(--bg-element);
+    color: var(--text-muted);
+}
+
+[data-theme="light"] .loading {
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top: 3px solid var(--accent-color);
+}
+
+/* تحسينات للاستجابة */
+@media (max-width: 768px) {
+    .settings-bar {
+        top: 10px;
+        left: 10px;
+        flex-direction: column;
+    }
+    
+    .theme-btn, .lang-btn {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    header {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+}
