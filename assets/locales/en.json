@@ -121,5 +121,9 @@
     "previewLayers": "👁️ Preview Layers",
     "download3dGcode": "💾 Download 3D G-code",
     "gcodeOutput": "G-code Output",
+     "gcodeOutput": "مخرجات G-code",
+    "previewLaye": "معاينة الطبقة",
+    "previewLayer": "معاينة  الطبقة",
+    "topLegend": "وسيلة الإيضاح",
     "lang": "EN"
 }
